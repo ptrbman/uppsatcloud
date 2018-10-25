@@ -1,0 +1,268 @@
+#################
+# A comprehensive implementation of injecting public keys is available on following URL:
+#
+#https://github.com/openstack/heat-templates/blob/master/hot/software-config/example-templates/example-ssh-copy-id.yaml
+#################
+
+
+heat_template_version: 2013-05-23
+
+description: A master/worker configuration
+
+# Declare parameters 
+parameters:
+
+  image:
+    type: string
+    label: Image name or ID
+    description: Image to be used for compute instance
+    default: 8509d788-d21f-4d7a-874c-8b2a454134d7
+
+  flavor:
+    type: string
+    label: Flavor
+    description: Type of instance (flavor) to be used
+    default: ACCHT18.large
+
+  key:
+    type: string
+    label: Key name
+    description: Name of key-pair to be used for compute instance
+    default: Eve
+
+  public_network:
+    type: string
+    label: Public network name or ID
+    description: Public network with floating IP addresses.
+    default: Public External IPv4 Network
+
+  extra_public_key:
+    type: string
+    description: "A public key to install in all machines"
+    default: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCfLXQTkPXq/vpFqDiqY18p0Nh3A+6L7DaSXLqFJ+8jtCaL0bo+A39s7BMeTYanxxcFo3itBq4ypycOfhcEMyZmhVOKcw5RuCMtQJ2utrlcNx27WC3qceVIsjG50za9bAMUIXIZXHm3fit8vIGxqYCrd1OJwJ4FhHZ8HspdP56p4l1YiOudyT1G+DuQ996l+86Qobu6sRKAwSMqUY5PIpkY1hrzbXr3/rp6co04K/OR89uhh+1TovEMwPhEiNMiOGWb8VJQ/Pr3v7HvARuJjbuXfqE+Wxu4i/+XP/AfYtCoBnLnq0J2JgvISifrAu1gH7NV4TKKvg1SqB5/L8KRBA4n albin@minerva"
+
+  mountpoint:
+    type: string
+    description: The volume/nfs mount point
+    default: /mnt/data
+
+  vol_size:
+    type: number
+    description: The size of the Cinder volume
+    default: 5
+
+
+# Resource allocation
+resources:
+  master_sg:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: master_sg
+      rules:
+        - protocol: icmp
+        - protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+        - protocol: tcp # For the web UI
+          port_range_min: 5000
+          port_range_max: 5000
+        #- protocol: tcp # For the Docker registry
+        #  port_range_min: 6060
+        #  port_range_max: 6060
+
+  allow_self_rule:
+    type: OS::Neutron::SecurityGroupRule
+    properties:
+      security_group: { get_resource: master_sg }
+      description: A rule to allow group-internal communications
+      remote_group: { get_resource: master_sg }
+
+  private_network:
+    type: OS::Neutron::Net
+
+  private_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: private_network }
+      cidr: 10.10.10.0/24
+      dns_nameservers:
+        - 130.238.164.6 
+        - 130.238.4.133 
+        - 130.238.7.10
+        - 130.239.1.90
+        - 129.16.1.53
+  router:
+    type: OS::Neutron::Router
+    properties:
+      external_gateway_info:
+        network: { get_param: public_network }
+
+  router-interface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: { get_resource: router }
+      subnet: { get_resource: private_subnet }
+
+  worker_port:
+    type: OS::Neutron::Port
+    properties:
+      network: { get_resource: private_network }
+      security_groups:
+        - { get_resource: master_sg }
+
+  master_port:
+    type: OS::Neutron::Port
+    properties:
+      network: { get_resource: private_network }
+      security_groups:
+        - { get_resource: master_sg }
+
+  data_volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: { get_param: vol_size }
+ 
+  master:
+    type: OS::Nova::Server
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key }
+      networks:
+        - port: { get_resource: master_port }
+      user_data:
+        str_replace: 
+          template: |
+            #!/bin/bash
+            set +x
+            echo "$pub_key" >> /home/ubuntu/.ssh/authorized_keys
+            apt-get update -y
+            apt-get upgrade -y
+            apt-get install -y nfs-kernel-server
+            mkdir -p $mountpoint
+            mkfs.ext4 /dev/vdb
+            echo "/dev/vdb $mountpoint ext4 defaults 1 2" >> /etc/fstab
+            mount $mountpoint
+            chown nobody:nogroup $mountpoint
+            echo "$mountpoint    *(ro,no_root_squash,no_subtree_check)" > /etc/exports
+            systemctl restart nfs-kernel-server
+
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+            apt-get update
+            apt-get install -y docker-ce
+
+            # Fix container networking issues:
+            echo '{"mtu": 1450}' > /etc/docker/daemon.json
+            systemctl restart docker.service
+
+            # RabbitMQ
+            wget -O - 'https://dl.bintray.com/rabbitmq/Keys/rabbitmq-release-signing-key.asc' | sudo apt-key add -
+            add-apt-repository "deb [arch=amd64] https://dl.bintray.com/rabbitmq/debian $(lsb_release -cs) main"
+            apt-get update
+            apt-get install -y rabbitmq-server redis-server
+            # bind redis to 0.0.0.0
+            sed -i 's/^\(bind.*\)/#\1/' /etc/redis/redis.conf
+            # protected mode off
+            sed -i 's/^protected-mode.*/protected-mode no/' /etc/redis/redis.conf
+            systemctl restart redis-server.service
+            systemctl restart rabbitmq-server.service
+
+            # Create a rabbitmq user with password and user name "pronouns"
+            rabbitmqctl add_user pronouns pronouns
+            
+            # GRANT ALL
+            rabbitmqctl set_permissions pronouns ".*" ".*" ".*"
+
+            export MASTER_IP=$(hostname --all-ip-addresses | awk '{print $1}')
+            echo CELERY_BROKER="amqp://project:project@$MASTER_IP" >> /home/ubuntu/env
+            echo CELERY_RESULT_BACKEND="redis://$MASTER_IP" >> /home/ubuntu/env
+
+            # START API SERVER HERE
+
+          params:
+            $pub_key: {get_param: extra_public_key}
+            $mountpoint: {get_param: mountpoint}
+
+  vol_att:
+    type: OS::Cinder::VolumeAttachment
+    properties:
+      instance_uuid: { get_resource: master }
+      volume_id: { get_resource: data_volume }
+      mountpoint: /dev/vdb
+
+  worker:
+    type: OS::Nova::Server
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key }
+      networks:
+        - port: { get_resource: worker_port }
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash
+            set +x
+            echo "$pub_key" >> /home/ubuntu/.ssh/authorized_keys
+            apt-get update -y
+            apt-get upgrade -y
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+            echo "$master_host master" >> /etc/hosts
+            apt-get update
+            apt-get install -y docker-ce nfs-common
+            
+            # Fix container networking issues:
+            echo '{"mtu": 1450, "insecure-registries" : ["master:6060"]}' > /etc/docker/daemon.json
+            systemctl restart docker.service
+
+            echo CELERY_BROKER="amqp://project:project@$master_host/" >> /home/ubuntu/env
+            echo CELERY_RESULT_BACKEND="redis://$master_host/" >> /home/ubuntu/env
+
+            # Add the NFS resource as a volume
+            docker volume create \
+            --driver=local --opt type=nfs \
+            --opt o=addr=master,ro \
+            --opt device=:$mountpoint data-volume
+
+            # START WORKER PROCESS HERE
+
+          params:
+            $pub_key: {get_param: extra_public_key}
+            $master_host: {get_attr: [master, first_address]}
+            $mountpoint: {get_param: mountpoint}
+
+  floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: { get_param: public_network }
+
+  floating_ip_assoc:
+    type: OS::Neutron::FloatingIPAssociation
+    properties:
+      floatingip_id: { get_resource: floating_ip }
+      port_id: { get_resource: master_port } 
+
+# Output in case of successful booting
+outputs:
+  master_instance_name:
+    description: Name of the master
+    value: { get_attr: [master, name] }
+
+  master_instance_ip:
+    description: IP address of the master instance
+    value: { get_attr: [master, first_address] }
+
+  worker_instance_name:
+    description: Name of the worker
+    value: { get_attr: [worker, name] }
+
+  worker_instance_ip:
+    description: IP address of the master instance
+    value: { get_attr: [worker, first_address] }
+
+  master_instance_floating_ip:
+    description: Floating IP address of the master instance
+    value: { get_attr: [floating_ip, floating_ip_address] }
