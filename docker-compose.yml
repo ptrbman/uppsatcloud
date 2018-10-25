@@ -18,6 +18,8 @@ services:
     environment:
       CELERY_BROKER: "amqp://rabbitmq"
       CELERY_RESULT_BACKEND: "redis://redis"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
   rabbitmq:
     image: "rabbitmq:3-alpine"
@@ -34,11 +36,4 @@ services:
       driver: none
 
     ports:
-      - 6379:6379  
-
-  docker:
-    image: docker
-    stdin_open: true
-    tty: true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - 6379:6379    
