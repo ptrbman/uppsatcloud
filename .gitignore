@@ -1,0 +1,11 @@
+*.aux
+.DS_Store
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.log
+*.fls
+*.run.xml
+/report/report.pdf
+/report/auto

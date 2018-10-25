@@ -1,0 +1,131 @@
+\usepackage[papersize={8.27in,11.69in},hmargin=0.5in,tmargin=1.055in,bmargin=1.055in,includehead]{geometry}
+% paper size if 6in x 9in which is standard international size
+% margin from top is 0.7in including header
+% margin from bottom is 0.6in including footer
+% book of two sided pages is specified, with horizontal margin of 0.6in
+% binding offset is an additional 0.1in from centre fold.
+% REAL textwidth is therefore 6 - 2*0.6 -0.1 = 4.7in = 11.938cm, 0.45\textwidth = 5.3721 cm with 3 margins of 0.3979cm
+\usepackage{multicol}
+\setlength{\columnsep}{0.27in}
+%
+\usepackage[
+    %backend=bibtex,
+    backend=biber,
+    natbib=true,
+    style=numeric,
+    sorting=none,
+    backref=true
+]{biblatex} %,style=verbose-trad2
+%\addbibresource{bib.bib}
+\bibliography{bibliography}
+
+
+\usepackage[explicit]{titlesec}
+\usepackage{titletoc}
+\usepackage{lmodern}
+\usepackage{epigraph}
+\usepackage{xpatch}  % All above used in titling
+%
+\usepackage{tikz}
+%
+\usepackage{pgfplots} % for better precision plots
+\pgfplotsset{compat=1.10} % for newer version?
+\usepgfplotslibrary{fillbetween} % for shading pgfplots
+
+\usepackage{graphicx}
+\usepackage{wrapfig} % for odd wrapping of text around figure
+%
+\usepackage{textcomp} % for currency %\usepackage[gen]{eurosym}
+%
+\usepackage{lipsum} %for filler text only
+%
+%\usepackage{bold-extra} % Used in Game Theory Section for bold sc's
+\usepackage[T1]{fontenc}
+%
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{bm} %for bold greeks
+\usepackage{booktabs} %for better standard tables
+\usepackage{longtable} %used for acronymns table
+\usepackage{array} % for customising paragraph p columns alignment
+\usepackage{tablefootnote} % obvious
+\usepackage{arydshln} %for dotted v lines in tables
+%
+\usepackage{glossaries}
+\usepackage{caption}
+\usepackage{subcaption}
+%
+\usepackage{enumerate} %for lists
+%
+\usepackage{fancyhdr} %for custom page headers
+%
+\usepackage{imakeidx} % for indexing
+
+%%% TIKZ Predefinitions
+\usetikzlibrary{patterns}
+\usetikzlibrary{decorations}
+\tikzstyle{block} =
+    [rectangle, draw
+     % , fill=blue!20
+      , text width=7.5em
+      , text centered
+      , node distance=3.5cm
+      , rounded corners
+      , minimum height=2em
+      , scale =0.8]
+\tikzstyle{blockL} =
+    [rectangle, draw
+     % , fill=blue!20
+      , text width=7.5em
+      , align=left
+      , node distance=3.5cm
+      , rounded corners
+      , minimum height=2em
+      , scale =0.8]
+\tikzstyle{block20} =
+    [rectangle, draw
+     % , fill=blue!20
+      , text width=9em
+      , text centered
+      , node distance=3.5cm
+      , rounded corners
+      , minimum height=2em
+      , scale =0.8]
+      \tikzstyle{block40} =
+    [rectangle, draw
+     % , fill=blue!20
+      , text width=10.5em
+      , text centered
+      , node distance=3.5cm
+      , rounded corners
+      , minimum height=2em
+      , scale =0.8]
+ \tikzstyle{Vblock} =
+    [rectangle, draw=none
+     % , fill=blue!20
+      , text width=15em
+      , text centered
+      , node distance=3.5cm
+      , rounded corners
+      , minimum height=2em
+      , scale =0.8]
+\tikzstyle{Lblock} =
+    [rectangle, draw
+     % , fill=blue!20
+      , text width=35em
+      , text centered
+      , node distance=3.5cm
+      , rounded corners
+      , minimum height=2em
+      , scale =0.8]
+\tikzstyle{virtual} = [coordinate]
+%%%%%%%%%%%%%%%%%%%%
+
+\usepackage{sectsty}
+\sectionfont{\centering}
+\subsectionfont{\centering}
+\usepackage{float} % for helping figures in twocol environ with [H]
+\usepackage[font=small,labelfont=bf,textfont=it]{caption} % for caption text that
+                                              % can be at all discerned
+                                              % from normal text
+ \newcommand{\fixme}[1]{{\color{red}#1}} 

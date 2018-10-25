@@ -11,3 +11,6 @@ stack:
 		master_instance_floating_ip \
 		--format=value \
 		--column=output_value
+
+report/report.pdf:
+	cd report && $(MAKE) report.pdf

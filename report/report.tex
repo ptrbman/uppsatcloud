@@ -1,0 +1,42 @@
+\documentclass{article}
+
+\input{preamble}
+\usepackage{lipsum}
+\AtBeginDocument{\renewcommand{\bibname}{\centerline References}}
+\begin{document}
+
+\input{title}
+
+\begin{multicols}{2}
+
+\section*{Abstract}
+
+\textbf{ \textit { \fixme{We are doing something with some computers. That's a
+      good idea because.} }}
+
+\section*{Background}
+
+\lipsum[77]
+
+\section*{Methods}
+
+\lipsum[100]
+
+\section*{Results}
+
+\lipsum[100]
+
+\section*{Discussion}
+
+\lipsum[66]
+
+Also, something something, here is a reference~\cite{mell_nist_nodate}
+
+\section*{Conclusion}
+
+\lipsum[100]
+
+\printbibliography
+
+\end{multicols}
+\end{document}
