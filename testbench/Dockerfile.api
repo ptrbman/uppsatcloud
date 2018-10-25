@@ -1,0 +1,18 @@
+FROM python:3.6-alpine
+RUN apk add --no-cache gcc musl-dev libc-dev linux-headers
+RUN mkdir -p /var/app
+RUN adduser -S web
+RUN chown -R web /var/app
+COPY requirements.txt /var/app
+# We do this separately, for Docker's layer caching, as the code is more likely
+# to change:
+RUN pip install -r /var/app/requirements.txt
+
+COPY . /var/app
+WORKDIR /var/app/
+
+USER web
+
+EXPOSE 5000
+
+CMD uwsgi uwsgi.ini

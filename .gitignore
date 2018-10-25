@@ -9,3 +9,4 @@
 *.run.xml
 /report/report.pdf
 /report/auto
+/testbench/__pycache__/testbench.cpython-36.pyc

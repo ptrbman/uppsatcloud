@@ -13,7 +13,7 @@ services:
 
   worker:
     build:
-      context: .
+      context: testbench
       dockerfile: Dockerfile.worker
     environment:
       CELERY_BROKER: "amqp://rabbitmq"
