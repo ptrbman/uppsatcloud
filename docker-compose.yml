@@ -1,0 +1,37 @@
+version: '3'
+services:
+  web:
+    build:
+      context: testbench
+      dockerfile: Dockerfile.api
+    ports:
+      - "5000:5000"
+
+    environment:
+      CELERY_BROKER: "amqp://rabbitmq"
+      CELERY_RESULT_BACKEND: "redis://redis"
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      CELERY_BROKER: "amqp://rabbitmq"
+      CELERY_RESULT_BACKEND: "redis://redis"
+
+  rabbitmq:
+    image: "rabbitmq:3-alpine"
+    ports:
+      - "5672:5672"
+      - "5671:5671"
+    logging:
+      driver: none
+
+  redis:
+    image: "redis:alpine"
+
+    logging:
+      driver: none
+
+    ports:
+      - 6379:6379  

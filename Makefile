@@ -1,4 +1,5 @@
 STACK_NAME = "project-group-x-stack"
+NR_WORKERS_DEV = 8
 
 .PHONY: stack
 stack:
@@ -14,3 +15,11 @@ stack:
 
 report/report.pdf:
 	cd report && $(MAKE) report.pdf
+
+
+.PHONY: start-local
+start-local:
+	docker-compose down
+	docker-compose up \
+				--build \
+				--scale worker=${NR_WORKERS_DEV}
