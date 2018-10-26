@@ -56,9 +56,9 @@ def summarise_results(task):
     """
 
     return [
-        r for r in [subtask.result for subtask in task.results if subtask.ready]
+        r
+        for r in [subtask.result for subtask in task.results if subtask.ready]
     ]
-
 
 
 if __name__ == '__main__':
