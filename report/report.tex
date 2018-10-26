@@ -16,25 +16,63 @@
 
 \section*{Background}
 
-\lipsum[77]
+SMT~solvers are used in different areas, with one important use case being
+verification of hardware and software. For example, in model checking,
+SMT~formulas are generated such that any solution corresponds to a hardware or
+software bug.
+
+Many research topics in SMT~solvers correspond to improving solver techniques
+and devising new strategies and improved parameters of search. However, as the
+problem is NP-hard, such improvements are typically a trade off with some cases
+becoming faster and others slower. Therefore, when evaluating new methods
+extensive benchmarking must be used.
+
+These benchmarks are often run on local clusters or even local machines in
+sequential order, leading to long waits from start until a complete picture of
+the effects of the evaluated modifications are yielded. By instead using a cloud
+approach, where not only the number of machines could be scaled, but also
+dynamic load-balancing could be used, this waiting time could be greatly
+reduced.
+
+We therefore investigate how a SMT~solver can be adapted for benchmarking in a
+cloud environment, with UppSAT~\cite{uppsat} as a case study. The produced
+solution represents a partially automated testbed environment in the cloud with
+a complete continuous integration pipeline from code pushed to Git to it being
+benchmarked in the cloud, as well as a Representational State Transfer (REST)
+API controlling the testbed environment. Moreover, a modular system of Docker
+containers is used to package the solver for the test cases.
+
+We argue that the use of Docker serves the dual purpose of enhancing both
+repeatability and traceability of the experiments, as the entire experiment
+environment is packaged into containers, allowing the use of Docker's tools for
+comparison and analysis of containers in the event of unexpected results.
+Additionally, as an added benefit, Docker ensures clean separation of
+experiments.
+
+Finally, we investigate how virtualisation affects measurement errors of
+benchmarks, a topic in which there is a dearth of previous research.
 
 \section*{Methods}
 
-\lipsum[100]
+\fixme{\lipsum[100]}
+
+\subsection*{System Design and Implementation}
+
+\subsection*{Cloud Environment and Provisioning}
 
 \section*{Results}
 
-\lipsum[100]
+\fixme{\lipsum[100]}
 
 \section*{Discussion}
 
-\lipsum[66]
+\fixme{\lipsum[66]}
 
 Also, something something, here is a reference~\cite{mell_nist_nodate}
 
 \section*{Conclusion}
 
-\lipsum[100]
+\fixme{\lipsum[100]}
 
 \printbibliography
 

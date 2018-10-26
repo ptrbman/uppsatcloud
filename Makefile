@@ -13,7 +13,8 @@ stack:
 		--format=value \
 		--column=output_value
 
-report/report.pdf:
+.PHONY: report
+report:
 	cd report && $(MAKE) report.pdf
 
 
