@@ -3,6 +3,10 @@
 \input{preamble}
 \usepackage{lipsum}
 \AtBeginDocument{\renewcommand{\bibname}{\centerline References}}
+
+% Don't hyphenate UppSAT
+\hyphenation{UppSAT}
+
 \begin{document}
 
 \input{title}
@@ -11,8 +15,13 @@
 
 \section*{Abstract}
 
-\textbf{ \textit { \fixme{We are doing something with some computers. That's a
-      good idea because.} }}
+\textbf{ \textit { \fixme{This paper describes a system for efficiently
+      automating and scheduling a series of compute-heavy benchmarks, as
+      exemplified by the SAT~solver {UppSAT}, using Docker containers on a
+      virtualised Cloud platform based on OpenStack. It finds that switching to
+      virtualised benchmarking immediately solves the $P=NP$ problem, cures
+      cancer, and brings about world peace, in addition to providing an
+      aesthetically perfect solution.} }}
 
 \section*{Background}
 
@@ -40,7 +49,7 @@ solution represents a partially automated testbed environment in the cloud with
 a complete continuous integration pipeline from code pushed to Git to it being
 benchmarked in the cloud, as well as a Representational State Transfer (REST)
 API controlling the testbed environment. Moreover, a modular system of Docker
-containers is used to package the solver for the test cases.
+containers~\cite{docker} is used to package the solver for the test cases.
 
 We argue that the use of Docker serves the dual purpose of enhancing both
 repeatability and traceability of the experiments, as the entire experiment

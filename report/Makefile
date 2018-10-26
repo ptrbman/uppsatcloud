@@ -1,4 +1,4 @@
-report.pdf: report.tex bibliography.bib preamble.tex
+report.pdf: report.tex bibliography.bib preamble.tex title.tex
 	latexmk -xelatex report.tex
 
 .PHONY: clean
