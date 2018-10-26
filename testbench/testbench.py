@@ -31,7 +31,9 @@ def run_experiment(docker_image, timeout, instances):
     log.warning("Getting image %s", docker_image)
     client.images.pull(docker_image)
     log.warning("Fetched image %s", docker_image)
-    print("hello")
+    print(
+        client.containers.run(
+            docker_image, "echo hello world", auto_remove=True))
 
     return None
 
