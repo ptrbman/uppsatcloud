@@ -1,5 +1,5 @@
 STACK_NAME = "project-group-x-stack"
-NR_WORKERS_DEV = 8
+NR_WORKERS_DEV = 1
 
 .PHONY: stack
 stack:

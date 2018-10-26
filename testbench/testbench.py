@@ -6,12 +6,16 @@ from collections import Counter
 from itertools import islice
 
 import celery
+import docker
+from celery.utils.log import get_task_logger
 
 CELERY_BROKER = os.environ['CELERY_BROKER']
 CELERY_RESULT_BACKEND = os.environ['CELERY_RESULT_BACKEND']
 
 celery_app = celery.Celery(
-    "pronouns", broker=CELERY_BROKER, backend=CELERY_RESULT_BACKEND)
+    "testbench", broker=CELERY_BROKER, backend=CELERY_RESULT_BACKEND)
+
+log = get_task_logger(__name__)
 
 __version__ = 0.1
 
@@ -22,22 +26,25 @@ def run_experiment(docker_image, timeout, instances):
     Run an experiment configuration.
     """
 
-    # This is where we call the Docker API etc and Do The Thing.
+    client = docker.from_env()
+
+    log.warning("Getting image %s", docker_image)
+    client.images.pull(docker_image)
+    log.warning("Fetched image %s", docker_image)
+    print("hello")
 
     return None
 
 
-def run_experiments(configurations):
+def run_experiments(image, timeout, instances):
     """
     Spawn tasks to run experiments.
 
-    FIXME: This doesn't unpack anything.
-
     Returns a task group.
     """
-    paths = os.listdir(TWEET_DATA_PATH)
 
-    tasks = (run_experiment.s(None) for configuration in configurations)
+    tasks = (run_experiment.s(image, timeout, instance)
+             for instance in instances)
     return celery.group(tasks)()
 
 
@@ -55,4 +62,4 @@ def summarise_results(task):
 
 
 if __name__ == '__main__':
-    print("Do something here!")
+    run_experiments("ubuntu", 17, ["hej"])
