@@ -13,6 +13,10 @@ def uppsat(benchmark):
     ### RUN UppSAT
     client = docker.from_env()
     apiclient = APIClient()
+
+    client.login(username="backeman", password="uppsat")
+
+    client.images.pull("backeman/uppsat:z3")
     
     # Here we have an absolute path
     benchVolume = {'/benchmarks' : {'bind' : '/benchmarks', 'mode' : 'ro'} }
