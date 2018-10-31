@@ -4,7 +4,7 @@ NR_WORKERS_DEV = 1
 .PHONY: stack
 stack:
 	openstack stack create \
-		--create-rollback \
+		--enable-rollback \
 		--wait \
 		--template stack.yaml ${STACK_NAME}
 

@@ -16,12 +16,19 @@ parameters:
     type: string
     label: Image name or ID
     description: Image to be used for compute instance
-    default: 8509d788-d21f-4d7a-874c-8b2a454134d7
+    default: f252eced-7648-42bf-ad6a-74e8f4f9b7f5
 
-  flavor:
+  master_flavor:
     type: string
     label: Flavor
     description: Type of instance (flavor) to be used
+    default: ACCHT18.normal
+
+
+  worker_flavor:
+    type: string
+    label: Flavor
+    description: Type of instance (flavor) to be used for workers
     default: ACCHT18.large
 
   key:
@@ -40,6 +47,11 @@ parameters:
     type: string
     description: "A public key to install in all machines"
     default: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCfLXQTkPXq/vpFqDiqY18p0Nh3A+6L7DaSXLqFJ+8jtCaL0bo+A39s7BMeTYanxxcFo3itBq4ypycOfhcEMyZmhVOKcw5RuCMtQJ2utrlcNx27WC3qceVIsjG50za9bAMUIXIZXHm3fit8vIGxqYCrd1OJwJ4FhHZ8HspdP56p4l1YiOudyT1G+DuQ996l+86Qobu6sRKAwSMqUY5PIpkY1hrzbXr3/rp6co04K/OR89uhh+1TovEMwPhEiNMiOGWb8VJQ/Pr3v7HvARuJjbuXfqE+Wxu4i/+XP/AfYtCoBnLnq0J2JgvISifrAu1gH7NV4TKKvg1SqB5/L8KRBA4n albin@minerva"
+
+  extra_extra_public_key:
+    type: string
+    description: "Another public key"
+    default: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDS/HhtiIYCDXkI1oHNqtLDUqlyezk5Ia7i/ELcAWMif7mh6ev4a/l8pAh6qvKR3MN0K54q+oDFdheDzfDQ09IKToJBbjVCNpwSTQYiGc2dRJIgBTHbCd7BUX/ZZ47n7SDcJRNXT7Bsx1pvodNFRW0Wj/BEIMCD9z152vReiXZ4cg6Q6MzUIVl39oybL4j6k9cfUe1zH+YPInTs04GumHgIM0bYhGdR1VGTNQQxse45qn3IngusnQbfT2S7/w2Z5gB9PPzed5nFar7yCWYyblE526SBsmyNDp0pm+Ys+mdb5epjPVfQse6DJOc+EJVM6L2TN/3fNMAx9BkzxbFe63qj ptr@thoughtfrog"
 
   mountpoint:
     type: string
@@ -126,7 +138,7 @@ resources:
     type: OS::Nova::Server
     properties:
       image: { get_param: image }
-      flavor: { get_param: flavor }
+      flavor: { get_param: master_flavor }
       key_name: { get_param: key }
       networks:
         - port: { get_resource: master_port }
@@ -136,6 +148,7 @@ resources:
             #!/bin/bash
             set +x
             echo "$pub_key" >> /home/ubuntu/.ssh/authorized_keys
+            echo "$extra_pub_key" >> /home/ubuntu/.ssh/authorized_keys
             apt-get update -y
             apt-get upgrade -y
             apt-get install -y nfs-kernel-server
@@ -182,6 +195,7 @@ resources:
 
           params:
             $pub_key: {get_param: extra_public_key}
+            $extra_pub_key: {get_param: extra_extra_public_key}
             $mountpoint: {get_param: mountpoint}
 
   vol_att:
@@ -195,7 +209,7 @@ resources:
     type: OS::Nova::Server
     properties:
       image: { get_param: image }
-      flavor: { get_param: flavor }
+      flavor: { get_param: worker_flavor }
       key_name: { get_param: key }
       networks:
         - port: { get_resource: worker_port }
@@ -260,7 +274,7 @@ outputs:
     value: { get_attr: [worker, name] }
 
   worker_instance_ip:
-    description: IP address of the master instance
+    description: IP address of the worker instance
     value: { get_attr: [worker, first_address] }
 
   master_instance_floating_ip:
