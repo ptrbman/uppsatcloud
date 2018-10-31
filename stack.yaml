@@ -185,11 +185,11 @@ resources:
             systemctl restart redis-server.service
             systemctl restart rabbitmq-server.service
 
-            # Create a rabbitmq user with password and user name "pronouns"
-            rabbitmqctl add_user pronouns pronouns
+            # Create a rabbitmq user with password and user name "project"
+            rabbitmqctl add_user project project
             
             # GRANT ALL
-            rabbitmqctl set_permissions pronouns ".*" ".*" ".*"
+            rabbitmqctl set_permissions project ".*" ".*" ".*"
 
             export MASTER_IP=$(hostname --all-ip-addresses | awk '{print $1}')
             echo CELERY_BROKER="amqp://project:project@$MASTER_IP" >> /home/ubuntu/env
@@ -247,6 +247,17 @@ resources:
             --opt device=:$mountpoint data-volume
 
             # START WORKER PROCESS HERE
+            # log on to docker
+            # pull the worker container
+            # run the worker with
+            # - shared NFS folders mounted
+            # - /var/run/docker.sock bind-mounted
+            docker run -d --restart=always --name=worker \
+            --env-file=/home/ubuntu/env \
+            --volume /var/run/docker.sock:/var/run/docker.sock \
+            --volume data-volume:$mountpoint \
+            backeman/uppsat:worker
+
 
           params:
             $pub_key: {get_param: extra_public_key}

@@ -1,5 +1,10 @@
 STACK_NAME = "project-group-x-stack"
 NR_WORKERS_DEV = 1
+DOCKER_REPO=backeman/uppsat
+WORKER_TAG=${DOCKER_REPO}:worker
+API_TAG=${DOCKER_REPO}:api
+
+all: build-images
 
 .PHONY: stack
 stack:
@@ -28,3 +33,17 @@ start-local:
 .PHONY: clean
 clean:
 	openstack stack delete --wait ${STACK_NAME}
+
+build-images:
+	cd testbench && docker build \
+			--file Dockerfile.worker \
+			--tag ${WORKER_TAG} .
+
+	cd testbench && docker build \
+			--file Dockerfile.api \
+			--tag ${API_TAG} .
+
+
+push-images:
+	docker push ${API_TAG}
+	docker push ${WORKER_TAG}
