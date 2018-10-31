@@ -31,12 +31,6 @@ parameters:
     description: Type of instance (flavor) to be used for workers
     default: ACCHT18.large
 
-  key:
-    type: string
-    label: Key name
-    description: Name of key-pair to be used for compute instance
-    default: Eve
-
   public_network:
     type: string
     label: Public network name or ID
@@ -66,6 +60,14 @@ parameters:
 
 # Resource allocation
 resources:
+  generated_key_pair:
+    # Cluster control key allowing the ubuntu user on the master to SSH into the
+    # workers.
+    type: OS::Nova::KeyPair
+    properties:
+      name: generated key pair
+      save_private_key: True
+
   master_sg:
     type: OS::Neutron::SecurityGroup
     properties:
@@ -139,7 +141,7 @@ resources:
     properties:
       image: { get_param: image }
       flavor: { get_param: master_flavor }
-      key_name: { get_param: key }
+      key_name: { get_resource: generated_key_pair }
       networks:
         - port: { get_resource: master_port }
       user_data:
@@ -149,6 +151,8 @@ resources:
             set +x
             echo "$pub_key" >> /home/ubuntu/.ssh/authorized_keys
             echo "$extra_pub_key" >> /home/ubuntu/.ssh/authorized_keys
+            chown ubuntu:ubuntu /home/ubuntu/.ssh/id_rsa
+            chmod 600 /home/ubuntu/.ssh/id_rsa
             apt-get update -y
             apt-get upgrade -y
             apt-get install -y nfs-kernel-server
@@ -197,6 +201,7 @@ resources:
             $pub_key: {get_param: extra_public_key}
             $extra_pub_key: {get_param: extra_extra_public_key}
             $mountpoint: {get_param: mountpoint}
+            $private_key: { get_attr: [generated_key_pair, private_key] }
 
   vol_att:
     type: OS::Cinder::VolumeAttachment
@@ -210,7 +215,7 @@ resources:
     properties:
       image: { get_param: image }
       flavor: { get_param: worker_flavor }
-      key_name: { get_param: key }
+      key_name: { get_resource: generated_key_pair }
       networks:
         - port: { get_resource: worker_port }
       user_data:

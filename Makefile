@@ -24,3 +24,7 @@ start-local:
 	docker-compose up \
 				--build \
 				--scale worker=${NR_WORKERS_DEV}
+
+.PHONY: clean
+clean:
+	openstack stack delete --wait ${STACK_NAME}
