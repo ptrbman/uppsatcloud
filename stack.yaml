@@ -223,7 +223,7 @@ resources:
     type: worker.yaml
     properties:
       master_host: {get_attr: [master, first_address]}
-      flavor: {get_attr: worker_flavor}
+      flavor: {get_param: worker_flavor}
       mountpoint: {get_param: mountpoint}
       key: {get_resource: generated_key_pair}
       security_group: {get_resource: master_sg}

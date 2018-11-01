@@ -47,3 +47,8 @@ build-images:
 push-images:
 	docker push ${API_TAG}
 	docker push ${WORKER_TAG}
+
+validate-stack:
+	openstack stack create \
+	--dry-run \
+	--template stack.yaml ${STACK_NAME}

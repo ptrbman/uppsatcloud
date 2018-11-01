@@ -39,9 +39,9 @@ resources:
   worker_port:
     type: OS::Neutron::Port
     properties:
-      network: {get_resource: {get_param: private_network} }
+      network: {get_param: private_network}
       security_groups:
-        - {get_resource: {get_param: security_group}}
+        - {get_param: security_group}
 
   worker:
     type: OS::Nova::Server
