@@ -1,0 +1,94 @@
+heat_template_version: 2015-04-30
+
+parameters:
+  image:
+    type: string
+    label: Image name or ID
+    description: Image to be used for compute instance
+    default: f252eced-7648-42bf-ad6a-74e8f4f9b7f5
+
+  flavor:
+    type: string
+    label: Flavor
+    description: Type of instance (flavor) to be used for workers
+    default: ACCHT18.large
+
+  mountpoint:
+    type: string
+    description: The volume/nfs mount point
+    default: /mnt/data
+
+  key:
+    type: string
+    description: The name of a key for remote access
+
+  security_group:
+    type: string
+    description: The name of a security group to attach to
+
+  private_network:
+    type: string
+    description: The name of a private network to attach to
+
+  master_host:
+    type: string
+    description: The IP number or host name of the master
+
+
+resources:
+  worker_port:
+    type: OS::Neutron::Port
+    properties:
+      network: {get_resource: {get_param: private_network} }
+      security_groups:
+        - {get_resource: {get_param: security_group}}
+
+  worker:
+    type: OS::Nova::Server
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: {get_param: key}
+      networks:
+        - port: {get_resource: worker_port}
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash
+            set +x
+            apt-get update -y
+            apt-get upgrade -y
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+            echo "$master_host master" >> /etc/hosts
+            apt-get update
+            apt-get install -y docker-ce nfs-common
+            
+            # Fix container networking issues:
+            echo '{"mtu": 1450, "insecure-registries" : ["master:6060"]}' > /etc/docker/daemon.json
+            systemctl restart docker.service
+
+            echo CELERY_BROKER="amqp://project:project@$master_host/" >> /home/ubuntu/env
+            echo CELERY_RESULT_BACKEND="redis://$master_host/" >> /home/ubuntu/env
+
+            # Add the NFS resource as a volume
+            docker volume create \
+            --driver=local --opt type=nfs \
+            --opt o=addr=master,ro \
+            --opt device=:$mountpoint data-volume
+
+            # log on to docker
+            docker run -d --restart=always --name=worker \
+            --env-file=/home/ubuntu/env \
+            --volume /var/run/docker.sock:/var/run/docker.sock \
+            --volume data-volume:$mountpoint \
+            backeman/uppsat:worker
+
+          params:
+            $master_host: {get_param: master_host}
+            $mountpoint: {get_param: mountpoint}
+
+outputs:
+  OS::stack_id:
+    value: {get_resource: worker}

@@ -5,7 +5,7 @@
 #################
 
 
-heat_template_version: 2013-05-23
+heat_template_version: 2015-04-30
 
 description: A master/worker configuration
 
@@ -56,6 +56,11 @@ parameters:
     type: number
     description: The size of the Cinder volume
     default: 5
+
+  nr_workers:
+    type: number
+    description: The number of worker VMs to start
+    default: 1
 
 
 # Resource allocation
@@ -116,13 +121,6 @@ resources:
     properties:
       router_id: { get_resource: router }
       subnet: { get_resource: private_subnet }
-
-  worker_port:
-    type: OS::Neutron::Port
-    properties:
-      network: { get_resource: private_network }
-      security_groups:
-        - { get_resource: master_sg }
 
   master_port:
     type: OS::Neutron::Port
@@ -210,60 +208,6 @@ resources:
       volume_id: { get_resource: data_volume }
       mountpoint: /dev/vdb
 
-  worker:
-    type: OS::Nova::Server
-    properties:
-      image: { get_param: image }
-      flavor: { get_param: worker_flavor }
-      key_name: { get_resource: generated_key_pair }
-      networks:
-        - port: { get_resource: worker_port }
-      user_data:
-        str_replace:
-          template: |
-            #!/bin/bash
-            set +x
-            echo "$pub_key" >> /home/ubuntu/.ssh/authorized_keys
-            apt-get update -y
-            apt-get upgrade -y
-            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-
-            echo "$master_host master" >> /etc/hosts
-            apt-get update
-            apt-get install -y docker-ce nfs-common
-            
-            # Fix container networking issues:
-            echo '{"mtu": 1450, "insecure-registries" : ["master:6060"]}' > /etc/docker/daemon.json
-            systemctl restart docker.service
-
-            echo CELERY_BROKER="amqp://project:project@$master_host/" >> /home/ubuntu/env
-            echo CELERY_RESULT_BACKEND="redis://$master_host/" >> /home/ubuntu/env
-
-            # Add the NFS resource as a volume
-            docker volume create \
-            --driver=local --opt type=nfs \
-            --opt o=addr=master,ro \
-            --opt device=:$mountpoint data-volume
-
-            # START WORKER PROCESS HERE
-            # log on to docker
-            # pull the worker container
-            # run the worker with
-            # - shared NFS folders mounted
-            # - /var/run/docker.sock bind-mounted
-            docker run -d --restart=always --name=worker \
-            --env-file=/home/ubuntu/env \
-            --volume /var/run/docker.sock:/var/run/docker.sock \
-            --volume data-volume:$mountpoint \
-            backeman/uppsat:worker
-
-
-          params:
-            $pub_key: {get_param: extra_public_key}
-            $master_host: {get_attr: [master, first_address]}
-            $mountpoint: {get_param: mountpoint}
-
   floating_ip:
     type: OS::Neutron::FloatingIP
     properties:
@@ -273,7 +217,17 @@ resources:
     type: OS::Neutron::FloatingIPAssociation
     properties:
       floatingip_id: { get_resource: floating_ip }
-      port_id: { get_resource: master_port } 
+      port_id: { get_resource: master_port }
+
+  worker:
+    type: worker.yaml
+    properties:
+      master_host: {get_attr: [master, first_address]}
+      flavor: {get_attr: worker_flavor}
+      mountpoint: {get_param: mountpoint}
+      key: {get_resource: generated_key_pair}
+      security_group: {get_resource: master_sg}
+      private_network: {get_resource: private_network}
 
 # Output in case of successful booting
 outputs:
@@ -287,11 +241,11 @@ outputs:
 
   worker_instance_name:
     description: Name of the worker
-    value: { get_attr: [worker, name] }
+    value: { get_attr: [worker, resources.worker, name] }
 
   worker_instance_ip:
     description: IP address of the worker instance
-    value: { get_attr: [worker, first_address] }
+    value: { get_attr: [worker, resources.worker, first_address] }
 
   master_instance_floating_ip:
     description: Floating IP address of the master instance
