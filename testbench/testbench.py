@@ -64,4 +64,4 @@ def summarise_results(task):
 
 
 if __name__ == '__main__':
-    run_experiments("ubuntu", 17, ["hej"])
+    run_experiments("ubuntu:latest", 17, ["hej"])
