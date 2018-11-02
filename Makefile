@@ -10,12 +10,18 @@ all: build-images
 stack:
 	openstack stack create \
 		--wait \
-		--parameter nr_workers=2 \
+		--parameter nr_workers=1 \
 		--template stack.yaml ${STACK_NAME}
 
 	openstack stack output show ${STACK_NAME} \
 		--all \
 		--fit-width
+
+update-stack:
+	openstack stack update \
+		--wait \
+		--parameter nr_workers=1 \
+		--template stack.yaml ${STACK_NAME}
 
 .PHONY: get-master-ip
 get-master-ip:

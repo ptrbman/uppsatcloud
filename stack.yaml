@@ -85,6 +85,9 @@ resources:
         - protocol: tcp # For the web UI
           port_range_min: 5000
           port_range_max: 5000
+        - protocol: tcp # For the web UI
+          port_range_min: 5555
+          port_range_max: 5555          
         #- protocol: tcp # For the Docker registry
         #  port_range_min: 6060
         #  port_range_max: 6060
@@ -191,11 +194,17 @@ resources:
             rabbitmqctl set_permissions project ".*" ".*" ".*"
 
             export MASTER_IP=$(hostname --all-ip-addresses | awk '{print $1}')
-            echo CELERY_BROKER="amqp://project:project@$MASTER_IP" >> /home/ubuntu/env
+            echo CELERY_BROKER_URL="amqp://project:project@$MASTER_IP" >> /home/ubuntu/env
             echo CELERY_RESULT_BACKEND="redis://$MASTER_IP" >> /home/ubuntu/env
 
             # START API SERVER HERE
 
+            # CELERY FLOWER
+            docker run -d --restart=always --name=flower \
+            -p 5555:5555 \
+            --env-file=/home/ubuntu/env \
+            mher/flower
+            
           params:
             $pub_key: {get_param: extra_public_key}
             $extra_pub_key: {get_param: extra_extra_public_key}

@@ -69,8 +69,10 @@ resources:
             echo '{"mtu": 1450, "insecure-registries" : ["master:6060"]}' > /etc/docker/daemon.json
             systemctl restart docker.service
 
-            echo CELERY_BROKER="amqp://project:project@$master_host/" >> /home/ubuntu/env
+            echo CELERY_BROKER_URL="amqp://project:project@$master_host/" >> /home/ubuntu/env
             echo CELERY_RESULT_BACKEND="redis://$master_host/" >> /home/ubuntu/env
+
+            docker login -u backeman -p uppsat
 
             # Add the NFS resource as a volume
             docker volume create \
@@ -78,7 +80,7 @@ resources:
             --opt o=addr=master,ro \
             --opt device=:$mountpoint data-volume
 
-            # log on to docker
+            # log on to dockercat 
             docker run -d --restart=always --name=worker \
             --env-file=/home/ubuntu/env \
             --volume /var/run/docker.sock:/var/run/docker.sock \
