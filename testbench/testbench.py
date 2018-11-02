@@ -38,9 +38,9 @@ def uppsat(benchmark):
     client.images.pull("backeman/uppsat:z3")
     
     # Here we have an absolute path
-    benchVolume = {'/benchmarks' : {'bind' : '/benchmarks', 'mode' : 'ro'} }
+    benchVolume = {'data-volume' : {'bind' : '/benchmarks', 'mode' : 'ro'} }
     
-    container = client.containers.create("backeman/uppsat:z3", benchmark, volumes=benchVolume)
+    container = client.containers.create("backeman/uppsat:z3", "/benchmarks/" + benchmark, volumes=benchVolume)
     container.start()
     ex = container.wait()
     
@@ -64,7 +64,7 @@ def uppsat(benchmark):
     # Maybe exception handling...
     # WE ARE DONE!
     log.info("UppSAT: %s %f", output, runtime.total_seconds())
-    (output, runtime.total_seconds())
+    return (output, runtime.total_seconds())
     
 @celery_app.task()
 def run_experiment(docker_image, timeout, approximation, benchmark):
@@ -73,22 +73,27 @@ def run_experiment(docker_image, timeout, approximation, benchmark):
     """
     log.warning("Running UppSAT %s %s %s %s", docker_image, timeout, approximation, benchmark)
 
-    return uppsat("example.smt2")
+    return uppsat(benchmark)
     # uppsat)    print(
     #     client.containers.run(
     #         docker_image, "echo hello world", auto_remove=True))
 
-def run_experiments(image, timeout, approximation, benchmark):
+def run_experiments(images, timeout, approximations, benchmarks):
     """
     Spawn tasks to run experiments.
 
     Returns a task group.
     """
+    
+    #configs = cartesian_product(images, approximations, benchmarks)
+    configs = [("uppsat:z3", "ijcar", "test.smt2"), ("uppsat:z3", "ijcar", "test.smt2"), ("uppsat:z3", "ijcar", "test.smt2")]
 
-    return celery.group([run_experiment(image, timeout, approximation, benchmark).s])()
-    # tasks = (run_experiment.s(image, timeout, instance)
-    #          for instance in instances)
-    # return celery.group(tasks)()
+    
+    tasks = (run_experiment.s(image, timeout, approximation, benchmark)
+             for (image, approximation, benchmark) in configs)
+    group = celery.group(tasks)()
+    group.save()
+    return group
 
 
 def summarise_results(task):
@@ -106,4 +111,6 @@ def summarise_results(task):
 
 if __name__ == '__main__':
     # run_experiments("ubuntu:latest", 17, ["hej"])
-    run_experiments("uppsat:z3", 60, "ijcar", "example.smt")
+    group = run_experiments("uppsat:z3", 60, "ijcar", "test.smt2")
+    print(group)
+    print(summarise_results(group))
