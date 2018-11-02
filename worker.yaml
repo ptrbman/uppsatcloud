@@ -97,5 +97,5 @@ outputs:
     value: { get_attr: [worker, first_address] }
   worker_name:
     description: The name of the worker
-    value: "helloo"
+    value: { get_attr: [worker, name] }
   

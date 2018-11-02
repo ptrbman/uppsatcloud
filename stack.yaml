@@ -220,15 +220,19 @@ resources:
       floatingip_id: { get_resource: floating_ip }
       port_id: { get_resource: master_port }
 
-  worker:
-    type: worker.yaml
+  worker_group:
+    type: OS::Heat::ResourceGroup
     properties:
-      master_host: {get_attr: [master, first_address]}
-      flavor: {get_param: worker_flavor}
-      mountpoint: {get_param: mountpoint}
-      key: {get_resource: generated_key_pair}
-      security_group: {get_resource: master_sg}
-      private_network: {get_resource: private_network}
+      count: {get_param: nr_workers}
+      resource_def:
+        type: worker.yaml
+        properties:
+          master_host: {get_attr: [master, first_address]}
+          flavor: {get_param: worker_flavor}
+          mountpoint: {get_param: mountpoint}
+          key: {get_resource: generated_key_pair}
+          security_group: {get_resource: master_sg}
+          private_network: {get_resource: private_network}
 
 # Output in case of successful booting
 outputs:
@@ -240,18 +244,14 @@ outputs:
     description: IP address of the master instance
     value: { get_attr: [master, first_address] }
 
-  worker_instance_name:
-    description: Name of the worker
-    value: {get_attr: worker, resource.worker, name }
-
-  worker_instance_ip:
-    description: IP address of the worker instance
-    value: { get_attr: [worker, resource.worker, first_address] }
-
   master_instance_floating_ip:
     description: Floating IP address of the master instance
     value: { get_attr: [floating_ip, floating_ip_address] }
 
-  #worker_ips:
-  #  description: Internal IPs of the workers
-  #  value: { get_attr: [random_group, resource.worker, first_address] }
+  worker_ips:
+    description: Internal Addresses of the workers
+    value: { get_attr: [worker_group, worker_ip] }
+
+  worker_names:
+    description: Internal Addresses of the workers
+    value: { get_attr: [worker_group, worker_name] }
