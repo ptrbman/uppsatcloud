@@ -149,6 +149,7 @@ resources:
             set +x
             echo "$pub_key" >> /home/ubuntu/.ssh/authorized_keys
             echo "$extra_pub_key" >> /home/ubuntu/.ssh/authorized_keys
+            echo "$private_key" > /home/ubuntu/.ssh/id_rsa
             chown ubuntu:ubuntu /home/ubuntu/.ssh/id_rsa
             chmod 600 /home/ubuntu/.ssh/id_rsa
             apt-get update -y
@@ -241,12 +242,16 @@ outputs:
 
   worker_instance_name:
     description: Name of the worker
-    value: { get_attr: [worker, resources.worker, name] }
+    value: {get_attr: worker, resource.worker, name }
 
   worker_instance_ip:
     description: IP address of the worker instance
-    value: { get_attr: [worker, resources.worker, first_address] }
+    value: { get_attr: [worker, resource.worker, first_address] }
 
   master_instance_floating_ip:
     description: Floating IP address of the master instance
     value: { get_attr: [floating_ip, floating_ip_address] }
+
+  #worker_ips:
+  #  description: Internal IPs of the workers
+  #  value: { get_attr: [random_group, resource.worker, first_address] }

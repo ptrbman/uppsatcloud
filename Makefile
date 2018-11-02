@@ -18,6 +18,13 @@ stack:
 		--format=value \
 		--column=output_value
 
+.PHONY: get-master-ip
+get-master-ip:
+	openstack stack output show ${STACK_NAME} \
+			master_instance_floating_ip \
+			--format=value \
+			--column=output_value
+
 .PHONY: report
 report:
 	cd report && $(MAKE) report.pdf

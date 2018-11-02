@@ -92,3 +92,10 @@ resources:
 outputs:
   OS::stack_id:
     value: {get_resource: worker}
+  worker_ip:
+    description: The local IP number of the worker
+    value: { get_attr: [worker, first_address] }
+  worker_name:
+    description: The name of the worker
+    value: "helloo"
+  
