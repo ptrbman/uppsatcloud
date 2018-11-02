@@ -9,14 +9,13 @@ all: build-images
 .PHONY: stack
 stack:
 	openstack stack create \
-		--enable-rollback \
 		--wait \
+		--parameter nr_workers=2 \
 		--template stack.yaml ${STACK_NAME}
 
 	openstack stack output show ${STACK_NAME} \
-		master_instance_floating_ip \
-		--format=value \
-		--column=output_value
+		--all \
+		--fit-width
 
 .PHONY: get-master-ip
 get-master-ip:
