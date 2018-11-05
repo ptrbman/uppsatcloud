@@ -8,24 +8,28 @@ services:
       - "5000:5000"
 
     environment:
-      CELERY_BROKER: "amqp://rabbitmq"
+      CELERY_BROKER_URL: "amqp://rabbitmq"
       CELERY_RESULT_BACKEND: "redis://redis"
+    volumes:
+      - "data-volume:/benchmarks"
 
   worker:
     build:
       context: testbench
       dockerfile: Dockerfile.worker
     environment:
-      CELERY_BROKER: "amqp://rabbitmq"
+      CELERY_BROKER_URL: "amqp://rabbitmq"
       CELERY_RESULT_BACKEND: "redis://redis"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - "data-volume:/benchmarks"
 
   rabbitmq:
-    image: "rabbitmq:3-alpine"
+    image: "rabbitmq:3-management-alpine"
     ports:
       - "5672:5672"
       - "5671:5671"
+      - "15672:15672"
     logging:
       driver: none
 
@@ -37,3 +41,14 @@ services:
 
     ports:
       - 6379:6379    
+
+  flower:
+    image: mher/flower
+    command: flower --broker_api="http://guest:guest@rabbitmq:15672/api"
+    environment:
+        CELERY_BROKER_URL: amqp://rabbitmq
+    ports:
+        - "5555:5555"
+
+volumes:
+  data-volume: {}
