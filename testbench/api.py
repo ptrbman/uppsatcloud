@@ -138,7 +138,7 @@ class ExperimentResult(Resource):
                 'approximation': approx
             }
 
-            if result == "UNKNOWN":
+            if result == "ERROR":
                 errors.append(config_triplet)
             else:
                 results.append({
@@ -178,4 +178,4 @@ class ExperimentResultTable(Resource):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port="8080", debug=True)
+    app.run(host='0.0.0.0', port="5000", debug=True)
