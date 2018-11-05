@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import time
 from collections import Counter
 from itertools import islice
@@ -28,7 +29,8 @@ def convert(str):
     format = '%Y-%m-%dT%H:%M:%S.%f'    
     return(datetime.datetime.strptime(newstr, format))
 
-def uppsat(benchmark):
+
+def uppsat(benchmark, timeout):
     ### RUN UppSAT
     client = docker.from_env()
     apiclient = APIClient()
@@ -39,8 +41,10 @@ def uppsat(benchmark):
     
     # Here we have an absolute path
     benchVolume = {'data-volume' : {'bind' : '/benchmarks', 'mode' : 'ro'} }
-    
-    container = client.containers.create("backeman/uppsat:z3", "/benchmarks/" + benchmark, volumes=benchVolume)
+    env = {'INPUT' : benchmark, 'TIMEOUT' : '30'}
+
+    log.info("Starting UppSAT: %s", env)
+    container = client.containers.create("backeman/uppsat:z3", volumes=benchVolume, environment=env)
     container.start()
     ex = container.wait()
     
@@ -55,6 +59,7 @@ def uppsat(benchmark):
     stdout = container.logs(stdout=True)
     output = "UNKNOWN"
     for l in stdout.decode('ascii').splitlines():
+        log.info(l)
         if l.strip() == "sat":
             output = "SAT"
         elif l.strip() == "unsat":
@@ -63,6 +68,7 @@ def uppsat(benchmark):
 
     # Maybe exception handling...
     # WE ARE DONE!
+
     log.info("UppSAT: %s %f", output, runtime.total_seconds())
     return (output, runtime.total_seconds())
     
@@ -73,10 +79,8 @@ def run_experiment(docker_image, timeout, approximation, benchmark):
     """
     log.warning("Running UppSAT %s %s %s %s", docker_image, timeout, approximation, benchmark)
 
-    return uppsat(benchmark)
-    # uppsat)    print(
-    #     client.containers.run(
-    #         docker_image, "echo hello world", auto_remove=True))
+    return uppsat(benchmark, timeout)
+
 
 def run_experiments(images, timeout, approximations, benchmarks):
     """
@@ -86,7 +90,7 @@ def run_experiments(images, timeout, approximations, benchmarks):
     """
     
     #configs = cartesian_product(images, approximations, benchmarks)
-    configs = [("uppsat:z3", "ijcar", "test.smt2"), ("uppsat:z3", "ijcar", "test.smt2"), ("uppsat:z3", "ijcar", "test.smt2")]
+    configs = [("uppsat:z3", "ijcar", "IJCAR2018/mult1.c.10.smt2"), ("uppsat:z3", "ijcar", "IJCAR2018/e2a_1.c.smt2")]
 
     
     tasks = (run_experiment.s(image, timeout, approximation, benchmark)
@@ -109,8 +113,25 @@ def summarise_results(task):
     ]
 
 
+def launch_benchmarks(dir):
+    timeout = 5
+    configs = []
+    for f in os.listdir(dir):
+        image = "uppsat:z3"
+        approx = "ijcar"
+        bm = dir + f
+        print("Adding: %s %s %s" % (image, approx, bm))
+        newConfig = (image, approx, bm)
+        configs.append(newConfig)
+
+    tasks = (run_experiment.s(image, timeout, approximation, benchmark)
+             for (image, approximation, benchmark) in configs)
+    group = celery.group(tasks)()
+    group.save()
+    return group        
+
 if __name__ == '__main__':
-    # run_experiments("ubuntu:latest", 17, ["hej"])
-    group = run_experiments("uppsat:z3", 60, "ijcar", "test.smt2")
+    directory = sys.argv[1]
+    group = launch_benchmarks(directory)
     print(group)
-    print(summarise_results(group))
+    # print(summarise_results(group))
