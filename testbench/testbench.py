@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from itertools import islice
 
 import celery
+import dateparser
 import docker
 from celery.utils.log import get_task_logger
 from docker import APIClient
@@ -23,13 +24,6 @@ celery_app = celery.Celery(
 log = get_task_logger(__name__)
 
 __version__ = 0.1
-
-
-def convert(str):
-    s = str.split(".")
-    newstr = s[0] + "." + s[1][0:6]
-    format = '%Y-%m-%dT%H:%M:%S.%f'
-    return (datetime.datetime.strptime(newstr, format))
 
 
 def uppsat(benchmark):
@@ -57,7 +51,7 @@ def uppsat(benchmark):
     start = asd['State']['StartedAt']
     end = asd['State']['FinishedAt']
 
-    runtime = convert(end) - convert(start)
+    runtime = dateparser.parse(end) - dateparser.parse(start)
 
     # CHECK ANSWER
     stdout = container.logs(stdout=True)
