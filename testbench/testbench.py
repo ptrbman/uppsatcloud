@@ -97,6 +97,9 @@ def temporary_benchmark(benchmark):
     log.info("Serialised benchmark to file {}".format(full_path))
     with open(full_path, 'w') as fp:
         fp.write(benchmark)
+        # Super flush the file
+        fp.flush()
+        os.fsync(fp.fileno())
     try:
         yield filename
     finally:
