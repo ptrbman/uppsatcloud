@@ -10,6 +10,8 @@ services:
     environment:
       CELERY_BROKER_URL: "amqp://rabbitmq"
       CELERY_RESULT_BACKEND: "redis://redis"
+    volumes:
+      - "data-volume:/benchmarks"
 
   worker:
     build:
@@ -20,6 +22,7 @@ services:
       CELERY_RESULT_BACKEND: "redis://redis"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - "data-volume:/benchmarks"
 
   rabbitmq:
     image: "rabbitmq:3-management-alpine"
@@ -46,3 +49,6 @@ services:
         CELERY_BROKER_URL: amqp://rabbitmq
     ports:
         - "5555:5555"
+
+volumes:
+  data-volume: {}

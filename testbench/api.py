@@ -130,11 +130,12 @@ class ExperimentResult(Resource):
 
         results = []
         errors = []
-        for result, runtime in completed_results:
+        for (result, runtime), (solver, approx,
+                                benchmark) in completed_results:
             config_triplet = {
-                'benchmark': "",
-                'solver': "",
-                'approximation': ""
+                'benchmark': benchmark,
+                'solver': solver,
+                'approximation': approx
             }
 
             if result == "UNKNOWN":
