@@ -68,10 +68,14 @@ def uppsat(benchmark):
     return (output, runtime.total_seconds())
 
 
-@celery_app.task()
+@celery_app.task(retries=3)
 def run_experiment(docker_image, timeout, approximation, benchmark):
     """
     Run an experiment configuration.
+
+    Note that this function needs to also return the configuration it ran on
+    (image, approximation, benchmark) in order to distinguish experiments!
+
     """
     log.warning("Running UppSAT %s %s %s %s", docker_image, timeout,
                 approximation, benchmark)
@@ -109,8 +113,10 @@ def summarise_results(task):
     """
 
     return [
-        r
-        for r in [subtask.result for subtask in task.results if subtask.ready]
+        r for r in [
+            subtask.result for subtask in task.results
+            if (subtask.ready and subtask.result)
+        ]
     ]
 
 

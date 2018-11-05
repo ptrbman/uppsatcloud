@@ -1,31 +1,18 @@
 #!/usr/bin/env python3
 
-from flask import Flask
+import logging
+import pprint
+
+import daiquiri
+from flask import Flask, redirect, url_for
 from flask_restplus import Api, Resource, fields
 
-#import testbench
+import testbench
 
-# POST /experiments
-# {"benchmarks: [str]",
-#  "timeout": int,
-#  "approximations": [""],
-#  "solvers": ["backeman/uppsat:z3", "backeman/uppsat:mathsat"]}
-#
-# > <ID>
-# Runs the set of experiments: benchmarks x approximations x solvers
-
-# GET /experiments/<ID>/status
-# {
-# "status" = {DONE, NOT DONE, ERROR}
-# "experiment_configuration_count" = int
-# "results" = [([SAT|UNSAT|UNKNOWN, Runtime])]
-# "errored_configurations" = [(benchmark, solver, approximation)]
-# }
-
-# GET /experiments/<ID>/table
-# Nice HTML table
 app = Flask(__name__)
-api = Api(app)
+api = Api(app, validate=True)
+daiquiri.setup(level=logging.INFO)
+log = daiquiri.getLogger(__name__)
 
 HTTP_STATUS_ACCEPTED = 202
 HTTP_STATUS_NOT_FOUND = 404
@@ -97,6 +84,8 @@ result_model = api.model(
         fields.List(
             configuration_field,
             description="A list of errored configurations"),
+        'id':
+        fields.String(description="The ID of the given task"),
     })
 
 
@@ -104,17 +93,81 @@ result_model = api.model(
 class SubmitExperiment(Resource):
     @api.expect(submission_model)
     def post(self):
-        pass
+        setup = api.payload
+        log.info("Got POST with {}".format(pprint.pformat(setup)))
+
+        task = testbench.run_experiments(
+            images=setup['solvers'],
+            timeout=setup['timeout'],
+            approximations=setup['approximations'],
+            benchmarks=setup['benchmarks'])
+
+        # This is what produces a stable ID, so it's important!
+        task.save()
+
+        return redirect(url_for('experiment_result', id=task.id))
 
 
-@api.route('/experiments/<string:id>/status')
+def task_exists(task):
+    if not task:
+        return False
+
+    return True
+
+
+@api.route('/experiments/<string:id>')
 class ExperimentResult(Resource):
     @api.marshal_with(result_model)
     def get(self, id):
-        pass
+        log.info("Getting task ID {}".format(id))
+
+        task = testbench.celery_app.GroupResult.restore(id)
+        if not task_exists(task):
+            return "Task not found: {}".format(id), HTTP_STATUS_NOT_FOUND
+
+        completed_results = testbench.summarise_results(task)
+        log.info("Got results {}".format(pprint.pformat(completed_results)))
+
+        results = []
+        errors = []
+        for result, runtime in completed_results:
+            config_triplet = {
+                'benchmark': "",
+                'solver': "",
+                'approximation': ""
+            }
+
+            if result == "UNKNOWN":
+                errors.append(config_triplet)
+            else:
+                results.append({
+                    'result': result,
+                    'runtime': runtime,
+                    **config_triplet
+                })
+
+        if task.failed():
+            log.error("Failed task {}: {}".format(task_id, task.results))
+            status = "FAILED"
+        else:
+            status = "COMPLETED" if task.ready() else "PENDING"
+
+        return {
+            'id': id,
+            'status': status,
+            'experiment_count': len(task.results),
+            'completed_count': task.completed_count(),
+            'results': results,
+            'errors': errors,
+        }
 
     def delete(self, id):
-        pass
+        task = testbench.celery_app.GroupResult.restore(id)
+        if not task_exists(task):
+            return "Task not found: {}".format(id), HTTP_STATUS_NOT_FOUND
+        task.revoke(terminate=True)
+        task.forget()
+        task.delete()
 
 
 @api.route('/experiments/<string:id>/table')
@@ -124,4 +177,4 @@ class ExperimentResultTable(Resource):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0', port="8080", debug=True)
