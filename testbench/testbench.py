@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import datetime
 import os
 import time
 from collections import Counter
@@ -7,9 +8,8 @@ from itertools import islice
 
 import celery
 import docker
-from docker import APIClient
-import datetime
 from celery.utils.log import get_task_logger
+from docker import APIClient
 
 CELERY_BROKER_URL = os.environ['CELERY_BROKER_URL']
 CELERY_RESULT_BACKEND = os.environ['CELERY_RESULT_BACKEND']
@@ -25,8 +25,9 @@ __version__ = 0.1
 def convert(str):
     s = str.split(".")
     newstr = s[0] + "." + s[1][0:6]
-    format = '%Y-%m-%dT%H:%M:%S.%f'    
-    return(datetime.datetime.strptime(newstr, format))
+    format = '%Y-%m-%dT%H:%M:%S.%f'
+    return (datetime.datetime.strptime(newstr, format))
+
 
 def uppsat(benchmark):
     ### RUN UppSAT
@@ -36,21 +37,22 @@ def uppsat(benchmark):
     client.login(username="backeman", password="uppsat")
 
     client.images.pull("backeman/uppsat:z3")
-    
+
     # Here we have an absolute path
-    benchVolume = {'data-volume' : {'bind' : '/benchmarks', 'mode' : 'ro'} }
-    
-    container = client.containers.create("backeman/uppsat:z3", "/benchmarks/" + benchmark, volumes=benchVolume)
+    benchVolume = {'data-volume': {'bind': '/benchmarks', 'mode': 'ro'}}
+
+    container = client.containers.create(
+        "backeman/uppsat:z3", "/benchmarks/" + benchmark, volumes=benchVolume)
     container.start()
     ex = container.wait()
-    
+
     # CHECK TIME
-    asd =apiclient.inspect_container(resource_id=container.id)
+    asd = apiclient.inspect_container(resource_id=container.id)
     start = asd['State']['StartedAt']
     end = asd['State']['FinishedAt']
-    
+
     runtime = convert(end) - convert(start)
-    
+
     # CHECK ANSWER
     stdout = container.logs(stdout=True)
     output = "UNKNOWN"
@@ -59,24 +61,26 @@ def uppsat(benchmark):
             output = "SAT"
         elif l.strip() == "unsat":
             output = "UNSAT"
-            
 
     # Maybe exception handling...
     # WE ARE DONE!
     log.info("UppSAT: %s %f", output, runtime.total_seconds())
     return (output, runtime.total_seconds())
-    
+
+
 @celery_app.task()
 def run_experiment(docker_image, timeout, approximation, benchmark):
     """
     Run an experiment configuration.
     """
-    log.warning("Running UppSAT %s %s %s %s", docker_image, timeout, approximation, benchmark)
+    log.warning("Running UppSAT %s %s %s %s", docker_image, timeout,
+                approximation, benchmark)
 
     return uppsat(benchmark)
     # uppsat)    print(
     #     client.containers.run(
     #         docker_image, "echo hello world", auto_remove=True))
+
 
 def run_experiments(images, timeout, approximations, benchmarks):
     """
@@ -84,11 +88,12 @@ def run_experiments(images, timeout, approximations, benchmarks):
 
     Returns a task group.
     """
-    
-    #configs = cartesian_product(images, approximations, benchmarks)
-    configs = [("uppsat:z3", "ijcar", "test.smt2"), ("uppsat:z3", "ijcar", "test.smt2"), ("uppsat:z3", "ijcar", "test.smt2")]
 
-    
+    #configs = cartesian_product(images, approximations, benchmarks)
+    configs = [("uppsat:z3", "ijcar", "test.smt2"),
+               ("uppsat:z3", "ijcar", "test.smt2"),
+               ("uppsat:z3", "ijcar", "test.smt2")]
+
     tasks = (run_experiment.s(image, timeout, approximation, benchmark)
              for (image, approximation, benchmark) in configs)
     group = celery.group(tasks)()
