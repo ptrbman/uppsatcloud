@@ -40,13 +40,14 @@ def uppsat(benchmark, timeout):
     benchVolume = {'data-volume': {'bind': BENCHMARK_ROOT, 'mode': 'ro'}}
     env = {'INPUT' : os.path.join(BENCHMARK_ROOT, benchmark), 'TIMEOUT' : timeout}
 
-    container = client.containers.create(
+    container = client.containers.run(
         "backeman/uppsat:z3",
         environment=env,
-        volumes=benchVolume)
-    container.start()
-    ex = container.wait()
+        volumes=benchVolume,
+        detach=True)
+    log.info("Started container {}".format(container.id))
 
+    ex = container.wait()
     # CHECK TIME
     cInfo = apiclient.inspect_container(resource_id=container.id)
     start = cInfo['State']['StartedAt']
@@ -69,6 +70,8 @@ def uppsat(benchmark, timeout):
     # Maybe exception handling...
 
     log.info("UppSAT: %s %f", output, runtime.total_seconds())
+    log.info("Removing container {}".format(container.id))
+    container.remove()
     return (output, runtime.total_seconds())
 
 
@@ -80,8 +83,8 @@ def run_experiment(docker_image, timeout, approximation, benchmark):
     log.warning("Running UppSAT %s %s %s %s", docker_image, timeout,
                 approximation, benchmark)
     with temporary_benchmark(benchmark) as benchmark_file:
-        return (uppsat(benchmark_file), (docker_image, approximation,
-                                         benchmark))
+        return (uppsat(benchmark_file, timeout), (docker_image, approximation,
+                                                  benchmark))
 
 
 @celery_app.task(retries=3)

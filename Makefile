@@ -1,5 +1,5 @@
 STACK_NAME = "project-group-x-stack"
-NR_WORKERS_DEV = 1
+NR_WORKERS_DEV = 5
 DOCKER_REPO=backeman/uppsat
 WORKER_TAG=${DOCKER_REPO}:worker
 API_TAG=${DOCKER_REPO}:api
@@ -55,10 +55,14 @@ build-images:
 			--file Dockerfile.api \
 			--tag ${API_TAG} .
 
+	cd uppsat-docker && docker build \
+			--file Dockerfile \
+			--tag ${DOCKER_REPO}:z3 .
 
 push-images:
 	docker push ${API_TAG}
 	docker push ${WORKER_TAG}
+	docker push ${DOCKER_REPO}:z3
 
 validate-stack:
 	openstack stack create \
