@@ -10,5 +10,6 @@ RUN chmod +x /home/root/bin/z3
 ENV PATH "$PATH:/home/root/bin"
 ENV TIMEOUT="5"
 ENV INPUT="example.smt2"
+ENV APPROXIMATION="ijcar"
 
-ENTRYPOINT timeout -t $TIMEOUT java -jar uppsat.jar $INPUT
+ENTRYPOINT timeout -t $TIMEOUT java -jar uppsat.jar -app=$APPROXIMATION $INPUT

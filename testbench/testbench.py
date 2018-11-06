@@ -28,7 +28,7 @@ log = get_task_logger(__name__)
 __version__ = 0.1
 
 
-def uppsat(benchmark, timeout):
+def uppsat(benchmark, timeout, approximation):
     ### RUN UppSAT
     client = docker.from_env()
     apiclient = APIClient()
@@ -41,7 +41,8 @@ def uppsat(benchmark, timeout):
     benchVolume = {'data-volume': {'bind': BENCHMARK_ROOT, 'mode': 'ro'}}
     env = {
         'INPUT': os.path.join(BENCHMARK_ROOT, benchmark),
-        'TIMEOUT': timeout
+        'TIMEOUT': timeout,
+        'APPROXIMATION' : approximation
     }
 
     container = client.containers.run(
@@ -98,7 +99,7 @@ def run_experiment_file(docker_image, timeout, approximation, benchmark_file):
     """
     log.warning("Running UppSAT %s %s %s %s", docker_image, timeout,
                 approximation, benchmark_file)
-    return (uppsat(benchmark_file, timeout), (docker_image, approximation,
+    return (uppsat(benchmark_file, timeout, approximation), (docker_image, approximation,
                                               benchmark_file))
 
 
@@ -223,28 +224,51 @@ def launch_benchmarks_no_celery(dir, file_name):
     return results
 
 
-def launch_benchmarks(dir):
-    timeout = 5
+def launch_benchmarks(dir, approximation, timeout, copies):
     configs = []
     for f in os.listdir(dir):
         image = "uppsat:z3"
-        approx = "ijcar"
         bm = os.path.join(dir, f)
-        print("Adding: %s %s %s" % (image, approx, bm))
-        newConfig = (image, approx, bm)
+        print("Adding: %s %s %s" % (image, approximation, bm))
+        newConfig = (image, approximation, bm)
         configs.append(newConfig)
 
-    tasks = (run_experiment_file.s(image, timeout, approximation, benchmark)
-             for (image, approximation, benchmark) in configs)
+    groups = []
 
-    group = celery.group(tasks)()
-    group.save()
-    return group
+    for _ in range(copies):
+        tasks = (run_experiment_file.s(image, timeout, approximation, benchmark)
+                 for (image, approximation, benchmark) in configs)        
+        group = celery.group(tasks)()
+        group.save()
+        groups.append(group)
+        
+    return groups
 
 
 if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print("Usage: tesbench.py directory [approximation=ijcar] [timeout=5] [copies=1]")
+        import sys
+        sys.exit(0)        
+
     directory = sys.argv[1]
-    csv_file_name = sys.argv[2]
-    group = launch_benchmarks_no_celery(directory, csv_file_name)
-    print(group)
+    
+    # csv_file_name = sys.argv[2]
+
+    approximation = "ijcar"
+    if len(sys.argv) >= 3:
+        approximation = sys.argv[2]
+    
+    timeout = 5
+    if len(sys.argv) >= 4:
+        timeout = int(sys.argv[3])
+
+    copies = 1
+    if len(sys.argv) >= 5:
+        copies = int(sys.argv[4])
+
+    groups = launch_benchmarks(directory, approximation, timeout, copies)    
+    # group = launch_benchmarks_no_celery(directory, csv_file_name)
+    for g in groups:
+        print(g.id)
     # print(summarise_results(group))
