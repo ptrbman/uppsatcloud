@@ -7,49 +7,78 @@
 % Don't hyphenate UppSAT
 \hyphenation{UppSAT}
 
+%% \input{title}
+
+\title{\uppsat\ in the Cloud}
+\author{Peter Backeman \& Albin Stjerna}
+
 \begin{document}
 
-\input{title}
+\maketitle
 
 \begin{multicols}{2}
 
-\section*{Abstract}
-
-\textbf{ \textit { \fixme{This paper describes a system for efficiently
+\abstract{This paper describes a system for efficiently
       automating and scheduling a series of compute-heavy benchmarks, as
-      exemplified by the SMT~solver {UppSAT}, using Docker containers on a
+      exemplified by the SMT~solver {\uppsat}, using Docker containers on a
       virtualised Cloud platform based on OpenStack. It finds that switching to
       virtualised benchmarking immediately solves the $P=NP$ problem, cures
       cancer, and brings about world peace, in addition to providing an
-      aesthetically perfect solution.} }}
+      aesthetically perfect solution.}
+  
+
 
 \section*{Background}
 
-SMT~solvers are used in different areas, with one important use case being
-verification of hardware and software. For example, in model checking,
-SMT~formulas are generated such that any solution corresponds to a hardware or
-software bug.
 
-Many research topics in SMT~solvers correspond to improving solver techniques
-and devising new strategies and improved parameters of search. However, as the
-problem is NP-hard, such improvements are typically a trade off with some cases
-becoming faster and others slower. Therefore, when evaluating new methods
-extensive benchmarking must be used.
 
-These benchmarks are often run on local clusters or even local machines in
-sequential order, leading to long waits from start until a complete picture of
-the effects of the evaluated modifications are yielded. By instead using a cloud
-approach, where not only the number of machines could be scaled, but also
-dynamic load-balancing could be used, this waiting time could be greatly
-reduced.
+The Satisfiability Modulo Theories (SMT) is the problem of solving
+Boolean formulas where each propositional atom (in addition of being
+either true or false) has an interpretation in some theory (e.g.,
+linear arithmetic, bit-vectors). In many different areas, satisfying
+assignments (solutions) for these kind of formulas are sought for, one
+important use case being verification of hardware and software. For
+example, in model checking, a SMT~formula is generated such that a
+solution corresponds to a hardware or software bug. Therefore,
+efficient SMT-solvers are highly desirable and there exists much
+research in this field (see e.g.,~\cite{sathandbook} for an
+introduction).
 
-We therefore investigate how a SMT~solver can be adapted for benchmarking in a
-cloud environment, with UppSAT~\cite{uppsat} as a case study. The produced
-solution represents a partially automated testbed environment in the cloud with
-a complete continuous integration pipeline from code pushed to Git to it being
-benchmarked in the cloud, as well as a Representational State Transfer (REST)
-API controlling the testbed environment. Moreover, a modular system of Docker
-containers~\cite{docker} is used to package the solver for the test cases.
+The satisfiability problem (solving Boolean formulas) is probably the
+most famous NP-complete problem~\cite{satnp}, and SMT solvers must
+additionaly use a decision procedure for the various background
+theories, which results in a combination which is highly
+complex. Therefore, prediciting the performance changes when trying
+different strategies can be very hard, and usually extensive
+benchmarking is used to evaluate new techniques.
+
+These benchmarks are often run on local clusters or even local
+machines in sequential order, leading to long waits from start until a
+complete picture of the effects of the evaluated modifications are
+yielded. By instead using a cloud approach, where not only the number
+of machines could be scaled, but also dynamic load-balancing could be
+used, this waiting time could be greatly reduced.
+
+%% Maybe a reference to ``cloud approach'' above. But I am scared of picking a paper, since here they will actually now which papers are good :)
+
+In this paper, we investigate how a SMT~solver can be adapted to allow
+benchmarking in a cloud environment, with \uppsat~\cite{uppsat} as a
+case study. The contribution of this paper are:
+
+\begin{itemize}
+  \item a partially automated testbed environment in the cloud with a
+    complete continuous integration pipeline from code pushed to Git
+    to it being benchmarked in the cloud.
+    
+  \item a Representational State Transfer (REST) API controlling the
+    testbed environment
+    
+  \item a modular system of Docker containers~\cite{docker} which
+    packages \uppsat for easy deployment
+
+  \item an evaluation of how virtualisation affects measurement errors
+    of benchmarks
+\end{itemize}
 
 We argue that the use of Docker serves the dual purpose of enhancing both
 repeatability and traceability of the experiments, as the entire experiment
@@ -58,18 +87,67 @@ comparison and analysis of containers in the event of unexpected results.
 Additionally, as an added benefit, Docker ensures clean separation of
 experiments.
 
-Finally, we investigate how virtualisation affects measurement errors of
-benchmarks, a topic in which there is a dearth of previous research.
 
-\section*{Methods}
+\section{\uppsat}
+In this project we use the \uppsat SMT
+solver \footnote{https://github.com/uuverifiers/uppsat} as a
+benchmarking tool. It is an \emph{abstract} SMT solver -- it takes an
+\emph{approximation} and a \emph{back-end} SMT solver as input and
+yields an approximating SMT solver, illustrated in
+Figure~\ref{fig:uppsat}. For a more comprehensive description,
+see~\cite{uppsat}.
 
-Our system, Testbench, is an interactive batch processing system, where
-experiments are submitted and then executed. An experiment consists of a set of
-approximation levels for UppSAT, a list of Docker containers with solvers to
-benchmark, a timeout (applied to all configurations), and a set of benchmarks to
-execute. The system then evaluates the cross product of all these configuration
-options (corresponding to a set of trials) across all solvers and reports on the
-results.
+\begin{Figure}
+\centering
+\begin{tikzpicture}[node distance = 2cm] 
+  \tikzstyle{level 1}=[sibling distance=45mm] 
+  \tikzstyle{level 2}=[sibling distance=15mm] 
+  \tikzstyle{level 3}=[sibling distance=8mm]
+  \tikzstyle{rect} = [minimum width =2.5cm, minimum height=1cm]
+  \tikzstyle{norm}=[edge from parent/.style={draw, thick}]
+
+	\node[draw=none](aux){};
+	\node[draw,rectangle,rect, dashed,below of=aux, align=center](approx){Approximations};
+	\node[draw,rectangle,rect, below of=approx, below=-1cm, align=center](smt) {SMT};
+	\node[draw=none, below of=smt](sat){SAT/UNSAT};
+	\draw[->](aux.south)-- node[right=0.1cm, pos=.2](){$\phi$}(approx.north);
+	\draw[->]([xshift=0.5cm]approx.south)--([xshift=0.5cm]smt.north);
+	\draw[->]([xshift=-0.5cm]smt.north)--([xshift=-0.5cm]approx.south);
+	\draw[->](smt.south)--(sat.north);
+	\node[draw,inner sep=5mm,fit=(approx) (smt) ] {};	
+\end{tikzpicture}
+\label{fig:uppsat}
+  \captionof{figure}{\uppsat\ composition}\label{fig:uppsat}
+\end{Figure}
+
+\subsection{Instances}
+We will call the smallest kind of test an \emph{instance} and it consists of four parts:
+\begin{itemize}
+\item An approximation strategy
+\item An \uppsat\ back-end
+\item A timeout
+\item A SMT problem (a benchmark)
+\end{itemize}
+
+We will not go into detail the different possible arguments here but
+will quickly mention that in this study we will compare two
+approximation strategies with about one hundred SMT problems, while
+the back-end and timeout will remain fixed.
+
+\section{\testbench}
+
+Our system, \testbench, is an interactive batch processing system,
+where experiments are submitted to a queue of jobs and then executed
+by worker nodes. The system takes as input
+\begin{itemize}
+  \item A set of approximation strategies
+  \item A set of \uppsat\ back-ends
+  \item One timeout
+  \item A set of SMT problems
+\end{itemize}
+\testbench then evaluates the cross product of all these configuration
+and reports on the results. This corresponds to a complete testing of
+all the presented parameters of the system.
 
 \subsection*{REST API Design}
 
@@ -96,7 +174,7 @@ the architecture can be seen in Figure~\ref{fig:architecture}.
 \begin{Figure}
   \centering
   \includegraphics[width=0.9\textwidth]{architecture}
-  \captionof{figure}{An overview of the architecture of Testbench.}\label{fig:architecture}
+  \captionof{figure}{An overview of the architecture of \testbench.}\label{fig:architecture}
 \end{Figure}
 
 As experiments are executed inside of Docker containers, the host machine's
@@ -106,10 +184,10 @@ containment level as itself. The runtime reported is the runtime seen by Docker.
 
 \subsection*{Cloud Environment and Provisioning}
 
-Testbench is configured in a OpenStack cloud environment~\cite{openstack}, using
+\testbench is configured in a OpenStack cloud environment~\cite{openstack}, using
 HEAT orchestration templates for provisioning. The base VMs are running
 Ubuntu~\fixme{18.08}. RabbitMQ, Redis, and the front-end API are all installed
-on a (\texttt{small}) separate VM (called the master) in order to not interfere
+on a (\texttt{small}) separate VM (called the master) in order to avoid interference
 with the experiments. Each worker VM (\texttt{medium}) receives the same
 configuration; a clean installation of the Docker community edition, the address
 of the master VM, and a Docker container mounting a shared folder via NFS from
@@ -118,17 +196,35 @@ container running a worker instance upon booting and finishing provisioning.
 These worker instances were intentionally configured to only execute one task at
 a time, for optimal isolation between trials.
 
-It is worth mentioning that Testbench is designed to be relatively independent
+It is worth mentioning that \testbench is designed to be relatively independent
 of the underlying architecture. Therefore, it can easily be executed on ``bare
 metal'' hardware as well as on virtual machines.
 
 \section*{Results}
+Both as a demonstration of the usability of the system as well as
+evaluating measurement errors due to virtualization a number of tests
+were executed on \testbench. We used the following parameters:
+\begin{itemize}
+\item Two approximation strategies are used, \emph{Reduced Point
+  Floating Point}, presented in \cite{uppsat}, and \emph{bit-vector
+  approximation}, presented in \cite{joel}.
+
+\item One back-end is used, namely \emph{z3}\footnote{https://github.com/Z3Prover/z3}  .
+
+\item A fixed timeout of 60 seconds is used.
+
+\item A set of 130 benchmarks is used, consisting of satisfiable
+  instances of the quantifier free floating point segment of the
+  SMT-LIB\cite{smtlib}.
+\end{itemize}
+
+%% Fix Joel citation
+
 
 \subsection*{Measurement Errors in Our Cloud Environment}
 \fixme{In which we report on the standard deviation and therefore the
   reliability of our experiments when run on virtualised hardware and ideally
   find that it's as close to zero as possible.}
-
 
 \subsection*{Benchmark Lead Time Comparison}
  \fixme{Here we do some comparison on how long it takes to finish a set of benchmarks,

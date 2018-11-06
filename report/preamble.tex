@@ -27,6 +27,9 @@
 \usepackage{xpatch}  % All above used in titling
 %
 \usepackage{tikz}
+\usetikzlibrary{arrows.meta,fit,shapes,calc,positioning,chains, decorations,
+  decorations.pathreplacing, shapes.callouts}
+\usetikzlibrary{decorations.pathmorphing, decorations.text}
 %
 \usepackage{pgfplots} % for better precision plots
 \pgfplotsset{compat=1.10} % for newer version?
@@ -133,3 +136,6 @@
 \newenvironment{Figure}
   {\par\medskip\noindent\minipage{\linewidth}}
   {\endminipage\par\medskip}
+
+\newcommand{\uppsat}{UppSAT}
+\newcommand{\testbench}{TestBench}
