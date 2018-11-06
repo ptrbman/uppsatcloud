@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import csv
 import datetime
 import os
 import sys
@@ -38,7 +39,10 @@ def uppsat(benchmark, timeout):
 
     # Here we have an absolute path
     benchVolume = {'data-volume': {'bind': BENCHMARK_ROOT, 'mode': 'ro'}}
-    env = {'INPUT' : os.path.join(BENCHMARK_ROOT, benchmark), 'TIMEOUT' : timeout}
+    env = {
+        'INPUT': os.path.join(BENCHMARK_ROOT, benchmark),
+        'TIMEOUT': timeout
+    }
 
     container = client.containers.run(
         "backeman/uppsat:z3",
@@ -94,7 +98,8 @@ def run_experiment_file(docker_image, timeout, approximation, benchmark_file):
     """
     log.warning("Running UppSAT %s %s %s %s", docker_image, timeout,
                 approximation, benchmark_file)
-    return (uppsat(benchmark_file, timeout), (docker_image, approximation, benchmark_file))
+    return (uppsat(benchmark_file, timeout), (docker_image, approximation,
+                                              benchmark_file))
 
 
 @contextmanager
@@ -194,25 +199,52 @@ def summarise_results(task):
     ]
 
 
+def launch_benchmarks_no_celery(dir, file_name):
+    timeout = 5
+    configs = []
+    for f in os.listdir(dir):
+        image = "uppsat:z3"
+        approx = "ijcar"
+        bm = os.path.join(dir, f)
+        print("Adding: %s %s %s" % (image, approx, bm))
+        newConfig = (image, approx, bm)
+        configs.append(newConfig)
+
+    results = []
+
+    with open(file_name, "w") as fp:
+        writer = csv.writer(fp)
+        for (image, approximation, benchmark) in configs:
+            (result, runtime), _ = run_experiment_file(
+                image, timeout, approximation, benchmark)
+
+            writer.writerow([benchmark, result, runtime])
+            results.append([benchmark, result, runtime])
+    return results
+
+
 def launch_benchmarks(dir):
     timeout = 5
     configs = []
     for f in os.listdir(dir):
         image = "uppsat:z3"
         approx = "ijcar"
-        bm = dir + f
+        bm = os.path.join(dir, f)
         print("Adding: %s %s %s" % (image, approx, bm))
         newConfig = (image, approx, bm)
         configs.append(newConfig)
 
     tasks = (run_experiment_file.s(image, timeout, approximation, benchmark)
              for (image, approximation, benchmark) in configs)
+
     group = celery.group(tasks)()
     group.save()
-    return group        
+    return group
+
 
 if __name__ == '__main__':
     directory = sys.argv[1]
-    group = launch_benchmarks(directory)
+    csv_file_name = sys.argv[2]
+    group = launch_benchmarks_no_celery(directory, csv_file_name)
     print(group)
     # print(summarise_results(group))
