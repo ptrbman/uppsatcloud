@@ -27,45 +27,46 @@ log = get_task_logger(__name__)
 __version__ = 0.1
 
 
-def uppsat(benchmark):
+def uppsat(benchmark, timeout):
     ### RUN UppSAT
     client = docker.from_env()
     apiclient = APIClient()
     log.info("Running UppSAT on benchmark {}".format(benchmark))
 
     client.login(username="backeman", password="uppsat")
-
     client.images.pull("backeman/uppsat:z3")
 
     # Here we have an absolute path
     benchVolume = {'data-volume': {'bind': BENCHMARK_ROOT, 'mode': 'ro'}}
+    env = {'INPUT' : os.path.join(BENCHMARK_ROOT, benchmark), 'TIMEOUT' : timeout}
 
     container = client.containers.create(
         "backeman/uppsat:z3",
-        os.path.join(BENCHMARK_ROOT, benchmark),
+        environment=env,
         volumes=benchVolume)
     container.start()
     ex = container.wait()
 
     # CHECK TIME
-    asd = apiclient.inspect_container(resource_id=container.id)
-    start = asd['State']['StartedAt']
-    end = asd['State']['FinishedAt']
+    cInfo = apiclient.inspect_container(resource_id=container.id)
+    start = cInfo['State']['StartedAt']
+    end = cInfo['State']['FinishedAt']
 
     runtime = dateparser.parse(end) - dateparser.parse(start)
 
     # CHECK ANSWER
     stdout = container.logs(stdout=True)
-    output = "UNKNOWN"
+    output = "TIMEOUT"
     for l in stdout.decode('ascii').splitlines():
         log.info(l)
         if l.strip() == "sat":
             output = "SAT"
         elif l.strip() == "unsat":
             output = "UNSAT"
+        elif "rror" in l.strip():
+            output = "ERROR"
 
     # Maybe exception handling...
-    # WE ARE DONE!
 
     log.info("UppSAT: %s %f", output, runtime.total_seconds())
     return (output, runtime.total_seconds())
@@ -81,6 +82,16 @@ def run_experiment(docker_image, timeout, approximation, benchmark):
     with temporary_benchmark(benchmark) as benchmark_file:
         return (uppsat(benchmark_file), (docker_image, approximation,
                                          benchmark))
+
+
+@celery_app.task(retries=3)
+def run_experiment_file(docker_image, timeout, approximation, benchmark_file):
+    """
+    Run an experiment configuration.
+    """
+    log.warning("Running UppSAT %s %s %s %s", docker_image, timeout,
+                approximation, benchmark_file)
+    return (uppsat(benchmark_file, timeout), (docker_image, approximation, benchmark_file))
 
 
 @contextmanager
@@ -191,7 +202,7 @@ def launch_benchmarks(dir):
         newConfig = (image, approx, bm)
         configs.append(newConfig)
 
-    tasks = (run_experiment.s(image, timeout, approximation, benchmark)
+    tasks = (run_experiment_file.s(image, timeout, approximation, benchmark)
              for (image, approximation, benchmark) in configs)
     group = celery.group(tasks)()
     group.save()
