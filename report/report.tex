@@ -121,7 +121,8 @@ see~\cite{uppsat}.
 \end{Figure}
 
 \subsection{Instances}\label{sec:instances}
-We will call the smallest kind of test an \emph{instance} and it consists of four parts:
+We will call the smallest unit of trial within an \emph{experiment} an
+\emph{instance} and it consists of four configuration parameters:
 \begin{itemize}
 \item an approximation strategy
 \item an \uppsat{}\ back-end
@@ -129,26 +130,25 @@ We will call the smallest kind of test an \emph{instance} and it consists of fou
 \item a SMT problem (a benchmark)
 \end{itemize}
 
-We will not go into detail the different possible arguments here but
-will quickly mention that in this study we will compare two
-approximation strategies with about one hundred SMT problems, while
-the back-end and timeout will remain fixed.
+We will not go into detail the different possible arguments here but will
+quickly mention that in this study we will evaluate two approximation strategies
+over about one hundred SMT~problems across a fixed back-end and timeout.
 
 \section{\testbench{}}
 
 Our system, \testbench{}, is an interactive batch processing system,
 where experiments are submitted to a queue of jobs and then executed
-by worker nodes. The system takes as input
+by worker nodes. The system takes as its input:
 \begin{itemize}
   \item a set of approximation strategies
   \item a set of \uppsat{}\ back-ends
   \item a timeout
   \item a set of SMT problems
 \end{itemize}
-\testbench{} then evaluates the cross product of all these configurations (the
-instances, as defined in Section~\ref{sec:instances}) and reports on the
-results. This corresponds to a complete testing of all the presented parameters
-of the system.
+\testbench{} then performs the experiment of evaluating the cross product of all
+these configurations (the instances, as defined in Section~\ref{sec:instances})
+and reports the results. This corresponds to a complete evaluation of the system
+across all possible combinations of options.
 
 \subsection{REST API Design}
 
