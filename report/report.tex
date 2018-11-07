@@ -1,32 +1,26 @@
-\documentclass{article}
+\documentclass[a4paper]{IEEEtran}
 
 \input{preamble}
-\usepackage{lipsum}
-\AtBeginDocument{\renewcommand{\bibname}{\centerline References}}
 
-% Don't hyphenate UppSAT
-\hyphenation{\uppsat}
+\title{\uppsat{} in the Cloud}
+\author{Peter~Backeman and Albin~Stjerna}
 
-%% \input{title}
-
-\title{\uppsat\ in the Cloud}
-\author{Peter Backeman \& Albin Stjerna}
+\IEEEspecialpapernotice{Mini project for the course Applied Cloud Computing,
+  autumn 2018, Uppsala University.}
 
 \begin{document}
 
 \maketitle
 
-\begin{multicols}{2}
-
-\abstract{This paper describes a system for efficiently
-      automating and scheduling a series of compute-heavy benchmarks, as
-      exemplified by the SMT~solver {\uppsat{}}, using Docker containers on a
-      virtualised Cloud platform based on OpenStack. It finds that switching to
-      virtualised benchmarking immediately solves the $P=NP$ problem, cures
-      cancer, and brings about world peace, in addition to providing an
-      aesthetically perfect solution.}
-  
-
+\begin{abstract}
+  This paper describes a system for efficiently
+     automating and scheduling a series of compute-heavy benchmarks, as
+     exemplified by the SMT~solver {\uppsat{}}, using Docker containers on a
+     virtualised Cloud platform based on OpenStack. It finds that switching to
+     virtualised benchmarking immediately solves the $P=NP$ problem, cures
+     cancer, and brings about world peace, in addition to providing an
+     aesthetically perfect solution.
+\end{abstract}
 
 \section{Background}
 
@@ -90,7 +84,7 @@ experiments.
 
 \section{\uppsat{}}
 In this project we use the \uppsat{} SMT
-solver \footnote{https://github.com/uuverifiers/uppsat} as a
+solver~\footnote{https://github.com/uuverifiers/uppsat} as a
 benchmarking tool. It is an \emph{abstract} SMT solver -- it takes an
 \emph{approximation} and a \emph{back-end} SMT solver as input and
 yields an approximating SMT solver, illustrated in
@@ -116,7 +110,6 @@ see~\cite{uppsat}.
 	\draw[->](smt.south)--(sat.north);
 	\node[draw,inner sep=5mm,fit=(approx) (smt) ] {};	
 \end{tikzpicture}
-\label{fig:uppsat}
   \captionof{figure}{\uppsat{}\ composition}\label{fig:uppsat}
 \end{Figure}
 
@@ -186,17 +179,17 @@ Docker.
 
 \subsection{Cloud Environment and Provisioning}
 
-\testbench{} is configured in a OpenStack cloud environment~\cite{openstack}, using
-HEAT orchestration templates for provisioning. The base VMs are running
+\testbench{} is configured in a OpenStack cloud environment~\cite{openstack},
+using HEAT orchestration templates for provisioning. The base VMs are running
 Ubuntu~\fixme{18.08}. RabbitMQ, Redis, and the front-end API are all installed
-on a (\texttt{small}) separate VM (called the master) in order to avoid interference
-with the experiments. Each worker VM (\texttt{medium}) receives the same
-configuration; a clean installation of the Docker community edition, the address
-of the master VM, and a Docker container mounting a shared folder via NFS from
-the master for sharing benchmark files. All workers immediately start up a
-container running a worker instance upon booting and finishing provisioning.
-These worker instances were intentionally configured to only execute one task at
-a time, for optimal isolation between trials.
+on a (size \texttt{small}) separate VM (called the master) in order to avoid
+interference with the experiments. Each worker VM (\texttt{medium}) receives the
+same configuration; a clean installation of the Docker community edition, the
+address of the master VM, and a Docker container mounting a shared folder via
+NFS from the master for sharing benchmark files. All workers immediately start
+up a container running a worker instance upon booting and finishing
+provisioning. These worker instances were intentionally configured to only
+execute one task at a time, for optimal isolation between trials.
 
 It is worth mentioning that \testbench{} is designed to be independent of the
 underlying architecture. Therefore, it can easily be executed on ``bare metal''
@@ -245,5 +238,4 @@ We executed the experiment \fixme{five bazillion} times over a period of
 
 \printbibliography
 
-\end{multicols}
 \end{document}
