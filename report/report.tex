@@ -5,7 +5,7 @@
 \AtBeginDocument{\renewcommand{\bibname}{\centerline References}}
 
 % Don't hyphenate UppSAT
-\hyphenation{UppSAT}
+\hyphenation{\uppsat}
 
 %% \input{title}
 
@@ -20,7 +20,7 @@
 
 \abstract{This paper describes a system for efficiently
       automating and scheduling a series of compute-heavy benchmarks, as
-      exemplified by the SMT~solver {\uppsat}, using Docker containers on a
+      exemplified by the SMT~solver {\uppsat{}}, using Docker containers on a
       virtualised Cloud platform based on OpenStack. It finds that switching to
       virtualised benchmarking immediately solves the $P=NP$ problem, cures
       cancer, and brings about world peace, in addition to providing an
@@ -28,7 +28,7 @@
   
 
 
-\section*{Background}
+\section{Background}
 
 
 
@@ -62,7 +62,7 @@ used, this waiting time could be greatly reduced.
 %% Maybe a reference to ``cloud approach'' above. But I am scared of picking a paper, since here they will actually now which papers are good :)
 
 In this paper, we investigate how a SMT~solver can be adapted to allow
-benchmarking in a cloud environment, with \uppsat~\cite{uppsat} as a
+benchmarking in a cloud environment, with \uppsat{}~\cite{uppsat} as a
 case study. The contribution of this paper are:
 
 \begin{itemize}
@@ -74,7 +74,7 @@ case study. The contribution of this paper are:
     testbed environment
     
   \item a modular system of Docker containers~\cite{docker} which
-    packages \uppsat for easy deployment
+    packages \uppsat{} for easy deployment
 
   \item an evaluation of how virtualisation affects measurement errors
     of benchmarks
@@ -88,8 +88,8 @@ Additionally, as an added benefit, Docker ensures clean separation of
 experiments.
 
 
-\section{\uppsat}
-In this project we use the \uppsat SMT
+\section{\uppsat{}}
+In this project we use the \uppsat{} SMT
 solver \footnote{https://github.com/uuverifiers/uppsat} as a
 benchmarking tool. It is an \emph{abstract} SMT solver -- it takes an
 \emph{approximation} and a \emph{back-end} SMT solver as input and
@@ -117,16 +117,16 @@ see~\cite{uppsat}.
 	\node[draw,inner sep=5mm,fit=(approx) (smt) ] {};	
 \end{tikzpicture}
 \label{fig:uppsat}
-  \captionof{figure}{\uppsat\ composition}\label{fig:uppsat}
+  \captionof{figure}{\uppsat{}\ composition}\label{fig:uppsat}
 \end{Figure}
 
-\subsection{Instances}
+\subsection{Instances}\label{sec:instances}
 We will call the smallest kind of test an \emph{instance} and it consists of four parts:
 \begin{itemize}
-\item An approximation strategy
-\item An \uppsat\ back-end
-\item A timeout
-\item A SMT problem (a benchmark)
+\item an approximation strategy
+\item an \uppsat{}\ back-end
+\item a timeout
+\item a SMT problem (a benchmark)
 \end{itemize}
 
 We will not go into detail the different possible arguments here but
@@ -134,22 +134,23 @@ will quickly mention that in this study we will compare two
 approximation strategies with about one hundred SMT problems, while
 the back-end and timeout will remain fixed.
 
-\section{\testbench}
+\section{\testbench{}}
 
-Our system, \testbench, is an interactive batch processing system,
+Our system, \testbench{}, is an interactive batch processing system,
 where experiments are submitted to a queue of jobs and then executed
 by worker nodes. The system takes as input
 \begin{itemize}
-  \item A set of approximation strategies
-  \item A set of \uppsat\ back-ends
-  \item One timeout
-  \item A set of SMT problems
+  \item a set of approximation strategies
+  \item a set of \uppsat{}\ back-ends
+  \item a timeout
+  \item a set of SMT problems
 \end{itemize}
-\testbench then evaluates the cross product of all these configuration
-and reports on the results. This corresponds to a complete testing of
-all the presented parameters of the system.
+\testbench{} then evaluates the cross product of all these configurations (the
+instances, as defined in Section~\ref{sec:instances}) and reports on the
+results. This corresponds to a complete testing of all the presented parameters
+of the system.
 
-\subsection*{REST API Design}
+\subsection{REST API Design}
 
 This functionality is represented as two REST endpoints \texttt{/experiment},
 and \texttt{/experiment/<ID>}. A \texttt{POST}~request (illustrating
@@ -159,32 +160,33 @@ can be queried for its status (using a \texttt{GET}~request). Experiments can
 then be canceled (if running) and deleted via the \texttt{DELETE}~request to
 their endpoint.
 
-\subsection*{System Design and Implementation}
+\subsection{System Design and Implementation}
 
 The implementation is based on the Celery task queue~\cite{celery}, and packaged
 in Docker~\cite{docker} containers. The front-end REST API receives input from
-the user, unpacks the experiment into a set of trials, and submits them to the
-Celery task queue (via RabbitMQ) for processing. Each worker, with identical
-configuration, listens on the task queue, fetches tasks, and executes them,
-storing the results back into Celery (via Redis). The user can then, via the
-front-end REST API, query experiments for progress as they are executing, and is
-also able to cancel tasks via the \texttt{DELETE} command. An illustration of
-the architecture can be seen in Figure~\ref{fig:architecture}.
+the user, unpacks the experiment into a set of instances, and submits them one
+by one to the Celery task queue (via RabbitMQ) for processing. Each worker, with
+identical configuration, listens on the task queue, fetches tasks, and executes
+them, storing the results back into Celery (via Redis). The user can then, via
+the front-end REST API, query experiments for progress as they are executing, or
+cancel them via the \texttt{DELETE} command. An illustration of the architecture
+can be seen in Figure~\ref{fig:architecture}.
 
 \begin{Figure}
   \centering
   \includegraphics[width=0.9\textwidth]{architecture}
-  \captionof{figure}{An overview of the architecture of \testbench.}\label{fig:architecture}
+  \captionof{figure}{An overview of the architecture of \testbench{}.}\label{fig:architecture}
 \end{Figure}
 
 As experiments are executed inside of Docker containers, the host machine's
-control socket is bind-mounted into the Docker container running the workers,
-such that the worker effectively spawns and runs experiments at the same
-containment level as itself. The runtime reported is the runtime seen by Docker.
+control socket is bind-mounted into the Docker container running the worker
+application, such that the worker effectively spawns and runs experiments at the
+same containment level as itself. The runtime reported is the runtime seen by
+Docker.
 
-\subsection*{Cloud Environment and Provisioning}
+\subsection{Cloud Environment and Provisioning}
 
-\testbench is configured in a OpenStack cloud environment~\cite{openstack}, using
+\testbench{} is configured in a OpenStack cloud environment~\cite{openstack}, using
 HEAT orchestration templates for provisioning. The base VMs are running
 Ubuntu~\fixme{18.08}. RabbitMQ, Redis, and the front-end API are all installed
 on a (\texttt{small}) separate VM (called the master) in order to avoid interference
@@ -196,47 +198,48 @@ container running a worker instance upon booting and finishing provisioning.
 These worker instances were intentionally configured to only execute one task at
 a time, for optimal isolation between trials.
 
-It is worth mentioning that \testbench is designed to be relatively independent
-of the underlying architecture. Therefore, it can easily be executed on ``bare
-metal'' hardware as well as on virtual machines.
+It is worth mentioning that \testbench{} is designed to be independent of the
+underlying architecture. Therefore, it can easily be executed on ``bare metal''
+hardware as well as on virtual machines, provided that the underlying system can
+host Docker containers.
 
-\section*{Results}
-Both as a demonstration of the usability of the system as well as
-evaluating measurement errors due to virtualization a number of tests
-were executed on \testbench. We used the following parameters:
+\section{Results}
+To demonstrate the the usability of the system as well as for evaluating
+measurement errors due to virtualization, we executed a number of experiments
+with \testbench{}. The following parameters were used:
 \begin{itemize}
-\item Two approximation strategies are used, \emph{Reduced Point
-  Floating Point}, presented in \cite{uppsat}, and \emph{bit-vector
-  approximation}, presented in \cite{joel}.
+\item two approximation strategies \emph{Reduced Point
+  Floating Point}, presented in~\cite{uppsat}, and \emph{bit-vector
+  approximation}, presented in~\cite{joel}
 
-\item One back-end is used, namely \emph{z3}\footnote{https://github.com/Z3Prover/z3}  .
+\item the~\emph{z3}~\cite{z3} solver for the backend
 
-\item A fixed timeout of 60 seconds is used.
+\item a 60~second timeout
 
-\item A set of 130 benchmarks is used, consisting of satisfiable
-  instances of the quantifier free floating point segment of the
-  SMT-LIB\cite{smtlib}.
+\item a set of 130 benchmarks, consisting of satisfiable instances of the
+  quantifier free floating point segment of the SMT-LIB~\cite{smtlib}
 \end{itemize}
-
+We executed the experiment \fixme{five bazillion} times over a period of
+\fixme{a hundred years}, and recorded the results as reported by \testbench{}.
 %% Fix Joel citation
 
 
-\subsection*{Measurement Errors in Our Cloud Environment}
+\subsection{Measurement Errors in Our Cloud Environment}
 \fixme{In which we report on the standard deviation and therefore the
   reliability of our experiments when run on virtualised hardware and ideally
   find that it's as close to zero as possible.}
 
-\subsection*{Benchmark Lead Time Comparison}
+\subsection{Benchmark Lead Time Comparison}
  \fixme{Here we do some comparison on how long it takes to finish a set of benchmarks,
    compared to going by the manual approach, ideally finding that it's as close
    to positive infinity as possible.}
 
 
-\section*{Discussion}
+\section{Discussion}
 
 \fixme{\lipsum[66]}
 
-\section*{Conclusion}
+\section{Conclusion}
 
 \fixme{\lipsum[100]}
 
