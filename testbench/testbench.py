@@ -224,10 +224,10 @@ def launch_benchmarks_no_celery(dir, file_name):
     return results
 
 
-def launch_benchmarks(dir, approximation, timeout, copies):
+def launch_benchmarks(dir, backend, approximation, timeout, copies):
     configs = []
     for f in os.listdir(dir):
-        image = "uppsat:z3"
+        image = "uppsat:" + backend
         bm = os.path.join(dir, f)
         print("Adding: %s %s %s" % (image, approximation, bm))
         newConfig = (image, approximation, bm)
@@ -247,7 +247,9 @@ def launch_benchmarks(dir, approximation, timeout, copies):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print("Usage: tesbench.py directory [approximation=ijcar] [timeout=5] [copies=1]")
+        print("Usage: tesbench.py directory [backend=z3] [approximation=ijcar] [timeout=5] [copies=1]")
+        print("\tbackend: z3 | mathsat")
+        print("\tapproximation: ijcar | fixedpoint")
         import sys
         sys.exit(0)        
 
@@ -255,19 +257,23 @@ if __name__ == '__main__':
     
     # csv_file_name = sys.argv[2]
 
-    approximation = "ijcar"
+    backend = "z3"
     if len(sys.argv) >= 3:
         approximation = sys.argv[2]
     
-    timeout = 5
+    approximation = "ijcar"
     if len(sys.argv) >= 4:
-        timeout = int(sys.argv[3])
+        approximation = sys.argv[3]
+    
+    timeout = 5
+    if len(sys.argv) >= 5:
+        timeout = int(sys.argv[4])
 
     copies = 1
-    if len(sys.argv) >= 5:
-        copies = int(sys.argv[4])
+    if len(sys.argv) >= 6:
+        copies = int(sys.argv[5])
 
-    groups = launch_benchmarks(directory, approximation, timeout, copies)    
+    groups = launch_benchmarks(directory, backend, approximation, timeout, copies)    
     # group = launch_benchmarks_no_celery(directory, csv_file_name)
     for g in groups:
         print(g.id)

@@ -1,0 +1,19 @@
+FROM anapsix/alpine-java
+WORKDIR /home/root
+
+COPY uppsat.jar /home/root/
+COPY example.smt2 /home/root/
+COPY hard.smt2 /home/root/
+
+ENV PATH "$PATH:/home/root/bin"
+ENV TIMEOUT="5"
+ENV INPUT="example.smt2"
+ENV APPROXIMATION="ijcar"
+
+COPY z3 /home/root/bin/
+RUN chmod +x /home/root/bin/z3
+
+COPY mathsat /home/root/bin/
+RUN chmod +x /home/root/bin/mathsat
+
+ENTRYPOINT timeout -t $TIMEOUT java -jar uppsat.jar -backend=mathsat -validator=mathsat -app=$APPROXIMATION $INPUT

@@ -56,13 +56,18 @@ build-images:
 			--tag ${API_TAG} .
 
 	cd uppsat-docker && docker build \
-			--file Dockerfile \
+			--file Dockerfile.z3 \
 			--tag ${DOCKER_REPO}:z3 .
+
+	cd uppsat-docker && docker build \
+			--file Dockerfile.mathsat \
+			--tag ${DOCKER_REPO}:mathsat .
 
 push-images:
 	docker push ${API_TAG}
 	docker push ${WORKER_TAG}
 	docker push ${DOCKER_REPO}:z3
+	docker push ${DOCKER_REPO}:mathsat
 
 validate-stack:
 	openstack stack create \
