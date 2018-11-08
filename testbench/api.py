@@ -27,11 +27,9 @@ submission_model = api.model(
     'Experiments Submission', {
         'benchmarks':
         fields.List(
-            fields.String(
-                example=("(define-fun _t_28 () Bool (and _t_25 _t_27))\n"
-                         "(assert _t_28)\n"
-                         "(check-sat)")),
-            description="A list of benchmarks in X format to run"),
+            fields.String(example="square.smt2"),
+            description=
+            "A list of names of benchmarks files in SMTLib format to run"),
         'timeout':
         fields.Integer(example=60, description="The timeout, in seconds"),
         'approximations':

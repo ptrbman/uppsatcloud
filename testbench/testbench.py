@@ -85,24 +85,13 @@ def run_experiment(docker_image, timeout, approximation, benchmark):
     """
     log.warning("Running UppSAT %s %s %s %s", docker_image, timeout,
                 approximation, benchmark)
-    with temporary_benchmark(benchmark) as benchmark_file:
-        uppsat_result = uppsat(
-            docker_image=docker_image,
-            benchmark=benchmark_file,
-            timeout=timeout,
-            approximation=approximation)
-        return (uppsat_result, (docker_image, approximation, benchmark))
 
-
-@celery_app.task(retries=3)
-def run_experiment_file(docker_image, timeout, approximation, benchmark_file):
-    """
-    Run an experiment configuration.
-    """
-    log.warning("Running UppSAT %s %s %s %s", docker_image, timeout,
-                approximation, benchmark_file)
-    return (uppsat(docker_image, benchmark_file, timeout, approximation),
-            (docker_image, approximation, benchmark_file))
+    uppsat_result = uppsat(
+        docker_image=docker_image,
+        benchmark=benchmark,
+        timeout=timeout,
+        approximation=approximation)
+    return (uppsat_result, (docker_image, approximation, benchmark))
 
 
 @contextmanager
@@ -175,8 +164,8 @@ def launch_benchmarks_no_celery(dir, file_name):
     with open(file_name, "w") as fp:
         writer = csv.writer(fp)
         for (image, approximation, benchmark) in configs:
-            (result, runtime), _ = run_experiment_file(
-                image, timeout, approximation, benchmark)
+            (result, runtime), _ = run_experiment(image, timeout,
+                                                  approximation, benchmark)
 
             writer.writerow([benchmark, result, runtime])
             results.append([benchmark, result, runtime])
@@ -195,8 +184,7 @@ def launch_benchmarks(dir, approximation, timeout, copies):
     groups = []
 
     for _ in range(copies):
-        tasks = (run_experiment_file.s(image, timeout, approximation,
-                                       benchmark)
+        tasks = (run_experiment.s(image, timeout, approximation, benchmark)
                  for (image, approximation, benchmark) in configs)
         group = celery.group(tasks)()
         group.save()
