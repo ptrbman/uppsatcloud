@@ -180,9 +180,9 @@ def launch_benchmarks_no_celery(dir, backend, approximation, timeout, copies,
                 (result, runtime), _ = run_experiment(image, timeout,
                                                       approximation, benchmark)
 
-                writer.writerow([benchmark, result, runtime])
-                results.append([benchmark, result, runtime])
-    return results
+                writer.writerow([time.time(), benchmark, result, runtime])
+                results.append([time.time(), benchmark, result, runtime])
+    return results    
 
 
 def launch_benchmarks(dir, backend, approximation, timeout, copies):
