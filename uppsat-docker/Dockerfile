@@ -12,4 +12,4 @@ ENV TIMEOUT="5"
 ENV INPUT="example.smt2"
 ENV APPROXIMATION="ijcar"
 
-ENTRYPOINT timeout -t $TIMEOUT java -jar uppsat.jar -app=$APPROXIMATION $INPUT
+CMD env && timeout -t $TIMEOUT java -jar uppsat.jar -app=$APPROXIMATION $INPUT
