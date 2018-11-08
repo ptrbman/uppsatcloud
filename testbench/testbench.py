@@ -2,13 +2,14 @@
 
 import csv
 import datetime
+import itertools
 import os
+import pprint
 import sys
 import time
 import uuid
 from collections import Counter
 from contextlib import contextmanager
-from itertools import islice
 
 import celery
 import dateparser
@@ -28,28 +29,25 @@ log = get_task_logger(__name__)
 __version__ = 0.1
 
 
-def uppsat(benchmark, timeout, approximation):
+def uppsat(docker_image, benchmark, timeout, approximation):
     ### RUN UppSAT
     client = docker.from_env()
     apiclient = APIClient()
     log.info("Running UppSAT on benchmark {}".format(benchmark))
 
     client.login(username="backeman", password="uppsat")
-    client.images.pull("backeman/uppsat:z3")
+    client.images.pull(docker_image)
 
     # Here we have an absolute path
     benchVolume = {'data-volume': {'bind': BENCHMARK_ROOT, 'mode': 'ro'}}
     env = {
         'INPUT': os.path.join(BENCHMARK_ROOT, benchmark),
         'TIMEOUT': timeout,
-        'APPROXIMATION' : approximation
+        'APPROXIMATION': approximation
     }
 
     container = client.containers.run(
-        "backeman/uppsat:z3",
-        environment=env,
-        volumes=benchVolume,
-        detach=True)
+        docker_image, environment=env, volumes=benchVolume, detach=True)
     log.info("Started container {}".format(container.id))
 
     ex = container.wait()
@@ -88,8 +86,12 @@ def run_experiment(docker_image, timeout, approximation, benchmark):
     log.warning("Running UppSAT %s %s %s %s", docker_image, timeout,
                 approximation, benchmark)
     with temporary_benchmark(benchmark) as benchmark_file:
-        return (uppsat(benchmark_file, timeout), (docker_image, approximation,
-                                                  benchmark))
+        uppsat_result = uppsat(
+            docker_image=docker_image,
+            benchmark=benchmark_file,
+            timeout=timeout,
+            approximation=approximation)
+        return (uppsat_result, (docker_image, approximation, benchmark))
 
 
 @celery_app.task(retries=3)
@@ -99,8 +101,8 @@ def run_experiment_file(docker_image, timeout, approximation, benchmark_file):
     """
     log.warning("Running UppSAT %s %s %s %s", docker_image, timeout,
                 approximation, benchmark_file)
-    return (uppsat(benchmark_file, timeout, approximation), (docker_image, approximation,
-                                              benchmark_file))
+    return (uppsat(docker_image, benchmark_file, timeout, approximation),
+            (docker_image, approximation, benchmark_file))
 
 
 @contextmanager
@@ -130,56 +132,13 @@ def run_experiments(images, timeout, approximations, benchmarks):
     Returns a task group.
     """
 
-    #configs = cartesian_product(images, approximations, benchmarks)
-    configs = [("uppsat:z3", "ijcar", """
-                ;; activate model generation
-                (set-option :produce-models true)
-                (declare-fun x () Int)
-                (declare-fun y1 () Int)
-                (declare-fun y2 () Int)
-                (declare-fun z () Int)
-                (assert (= x y1))
-                (assert (not (= y1 z)))
-                (assert (= x y2))
-                (assert (and (> y2 0) (< y2 5)))
-                (check-sat)
-                (get-value (x z))
-                (exit)
-                """),
-               ("uppsat:z3", "ijcar", """
-                (set-option :produce-unsat-cores true)
-                (declare-fun x () Int)
-                (declare-fun y1 () Int)
-                (declare-fun y2 () Int)
-                (declare-fun z () Int)
-                (define-fun A1 () Bool (= x y1))
-                (define-fun A2 () Bool (not (< z 0)))
-                (define-fun A3 () Bool (= y1 z))
-                (define-fun B () Bool (and (= x y2) (not (= y2 z))))
-                (assert (! A1 :named First))
-                (assert (! A2 :named Second))
-                (assert (! A3 :named Third))
-                (assert B)
-                (check-sat)
-                (get-unsat-core)
-                (exit)
-                """),
-               ("uppsat:z3", "ijcar", """
-                (declare-fun x () Int)
-                (declare-fun y () Int)
-                (declare-fun a () Bool)
-                (declare-fun b () Bool)
-                (declare-fun c () Bool)
-                (declare-fun d () Bool)
-                (assert (= (> (+ x y) 0) a))
-                (assert (= (< (+ (* 2 x) (* 3 y)) (- 10)) c))
-                (assert (and (or a b) (or c d)))
-                (check-allsat (a b))
-                (exit)
-                """)]
+    # The set is needed to remove duplicates:
+    configs = set(
+        itertools.product(images, [timeout], approximations, benchmarks))
 
-    tasks = (run_experiment.s(image, timeout, approximation, benchmark)
-             for (image, approximation, benchmark) in configs)
+    log.info("Generated instance set: %s", pprint.pformat(configs))
+
+    tasks = (run_experiment.s(*config) for config in configs)
     group = celery.group(tasks)()
     group.save()
     return group
@@ -236,29 +195,32 @@ def launch_benchmarks(dir, approximation, timeout, copies):
     groups = []
 
     for _ in range(copies):
-        tasks = (run_experiment_file.s(image, timeout, approximation, benchmark)
-                 for (image, approximation, benchmark) in configs)        
+        tasks = (run_experiment_file.s(image, timeout, approximation,
+                                       benchmark)
+                 for (image, approximation, benchmark) in configs)
         group = celery.group(tasks)()
         group.save()
         groups.append(group)
-        
+
     return groups
 
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print("Usage: tesbench.py directory [approximation=ijcar] [timeout=5] [copies=1]")
+        print(
+            "Usage: tesbench.py directory [approximation=ijcar] [timeout=5] [copies=1]"
+        )
         import sys
-        sys.exit(0)        
+        sys.exit(0)
 
     directory = sys.argv[1]
-    
+
     # csv_file_name = sys.argv[2]
 
     approximation = "ijcar"
     if len(sys.argv) >= 3:
         approximation = sys.argv[2]
-    
+
     timeout = 5
     if len(sys.argv) >= 4:
         timeout = int(sys.argv[3])
@@ -267,7 +229,7 @@ if __name__ == '__main__':
     if len(sys.argv) >= 5:
         copies = int(sys.argv[4])
 
-    groups = launch_benchmarks(directory, approximation, timeout, copies)    
+    groups = launch_benchmarks(directory, approximation, timeout, copies)
     # group = launch_benchmarks_no_celery(directory, csv_file_name)
     for g in groups:
         print(g.id)
