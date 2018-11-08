@@ -259,7 +259,7 @@ if __name__ == '__main__':
 
     backend = "z3"
     if len(sys.argv) >= 3:
-        approximation = sys.argv[2]
+        backend = sys.argv[2]
     
     approximation = "ijcar"
     if len(sys.argv) >= 4:
