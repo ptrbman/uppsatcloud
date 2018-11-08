@@ -1,0 +1,368 @@
+/benchmarks/IJCAR2018/div.c.20.smt2
+	times:	[4.012131, 4.046556, 4.237672]
+	minmax:	0.055026
+	std:	0.099207
+/benchmarks/IJCAR2018/test_v3_r3_vr5_c1_s26769.smt2
+	times:	[1.986856, 2.046255, 1.980019]
+	minmax:	0.033046
+	std:	0.029744
+/benchmarks/IJCAR2018/test_v7_r12_vr5_c1_s14336.smt2
+	times:	[40.795859, 43.126816, 42.026804]
+	minmax:	0.055521
+	std:	0.952110
+/benchmarks/IJCAR2018/mult2.c.3.smt2
+	times:	[1.543494, 1.553387, 1.586264]
+	minmax:	0.027398
+	std:	0.018282
+/benchmarks/IJCAR2018/e2.c.smt2
+	times:	[2.053998, 2.151543, 2.109202]
+	minmax:	0.046342
+	std:	0.039938
+/benchmarks/IJCAR2018/div2.c.3.smt2
+	times:	[1.608581, 1.585204, 1.577266]
+	minmax:	0.019691
+	std:	0.013292
+/benchmarks/IJCAR2018/div2.c.10.smt2
+	times:	[2.52511, 2.500235, 2.544539]
+	minmax:	0.017558
+	std:	0.018133
+/benchmarks/IJCAR2018/div.c.30.smt2
+	times:	[5.469658, 5.574098, 5.584592]
+	minmax:	0.020736
+	std:	0.051884
+/benchmarks/IJCAR2018/e2_3.c.smt2
+	times:	[1.81492, 1.75694, 1.788833]
+	minmax:	0.032447
+	std:	0.023710
+/benchmarks/IJCAR2018/test_v7_r12_vr5_c1_s29826.smt2
+	times:	[29.470133, 29.980717, 30.170467]
+	minmax:	0.023443
+	std:	0.295742
+/benchmarks/IJCAR2018/e1_2.c.smt2
+	times:	[1.303329, 1.378222, 1.334783]
+	minmax:	0.055941
+	std:	0.030705
+/benchmarks/IJCAR2018/div.c.40.smt2
+	times:	[7.996115, 7.823673, 7.695822]
+	minmax:	0.038310
+	std:	0.123044
+/benchmarks/IJCAR2018/mult1.c.20.smt2
+	times:	[3.74275, 3.604693, 3.5985]
+	minmax:	0.039535
+	std:	0.066588
+/benchmarks/IJCAR2018/newton.7.2.i.smt2
+	times:	[10.16759, 10.109936, 10.165872]
+	minmax:	0.005681
+	std:	0.026783
+/benchmarks/IJCAR2018/div3.c.40.smt2
+	times:	[8.086607, 7.899507, 7.917097]
+	minmax:	0.023482
+	std:	0.084360
+/benchmarks/IJCAR2018/test_v3_r3_vr10_c1_s29304.smt2
+	times:	[2.062378, 2.009843, 1.956653]
+	minmax:	0.052609
+	std:	0.043162
+/benchmarks/IJCAR2018/test_v7_r12_vr5_c1_s8938.smt2
+	times:	[23.304, 23.186638, 23.486704]
+	minmax:	0.012864
+	std:	0.123466
+/benchmarks/IJCAR2018/test_v5_r5_vr1_c1_s15604.smt2
+	times:	[3.361829, 3.379149, 3.365707]
+	minmax:	0.005141
+	std:	0.007422
+/benchmarks/IJCAR2018/e2a_1.c.smt2
+	times:	[1.529887, 1.55935, 1.507218]
+	minmax:	0.034025
+	std:	0.021343
+/benchmarks/IJCAR2018/test_v5_r5_vr5_c1_s24018.smt2
+	times:	[11.134095, 11.212491, 11.195674]
+	minmax:	0.007012
+	std:	0.033699
+/benchmarks/IJCAR2018/mult1.c.3.smt2
+	times:	[1.624253, 1.594517, 1.588422]
+	minmax:	0.022361
+	std:	0.015653
+/benchmarks/IJCAR2018/sqrt.c.2.smt2
+	times:	[20.178668, 20.338302, 20.534354]
+	minmax:	0.017478
+	std:	0.145462
+/benchmarks/IJCAR2018/e3_1.c.smt2
+	times:	[1.891449, 1.872969, 1.906461]
+	minmax:	0.017718
+	std:	0.013697
+/benchmarks/IJCAR2018/test_v5_r5_vr10_c1_s7194.smt2
+	times:	[19.766202, 19.445957, 18.745567]
+	minmax:	0.052830
+	std:	0.426198
+/benchmarks/IJCAR2018/test_v5_r5_vr10_c1_s5996.smt2
+	times:	[3.109416, 3.087586, 3.118803]
+	minmax:	0.010053
+	std:	0.013077
+/benchmarks/IJCAR2018/div2.c.40.smt2
+	times:	[7.132287, 6.716092, 6.406464]
+	minmax:	0.107504
+	std:	0.297379
+/benchmarks/IJCAR2018/image_filter_true-unreach-call.c_2.smt2
+	times:	[1.754007, 1.598826, 1.639664]
+	minmax:	0.093249
+	std:	0.065679
+/benchmarks/IJCAR2018/newton.5.1.i.smt2
+	times:	[2.892835, 2.763382, 2.69486]
+	minmax:	0.071120
+	std:	0.082089
+/benchmarks/IJCAR2018/newton.6.2.i.smt2
+	times:	[4.021447, 3.498219, 3.599902]
+	minmax:	0.141164
+	std:	0.226521
+/benchmarks/IJCAR2018/newton.6.3.i.smt2
+	times:	[5.358113, 4.54249, 4.648392]
+	minmax:	0.168181
+	std:	0.362117
+/benchmarks/IJCAR2018/sine.1.0.i.smt2
+	times:	[5.258073, 4.877936, 4.735352]
+	minmax:	0.105449
+	std:	0.220623
+/benchmarks/IJCAR2018/test_v3_r3_vr1_c1_s10392.smt2
+	times:	[2.912232, 2.788792, 2.957419]
+	minmax:	0.058426
+	std:	0.071270
+/benchmarks/IJCAR2018/div3.c.10.smt2
+	times:	[2.600561, 2.577594, 2.452608]
+	minmax:	0.058167
+	std:	0.065012
+/benchmarks/IJCAR2018/div3.c.3.smt2
+	times:	[1.794952, 1.608909, 1.576427]
+	minmax:	0.131634
+	std:	0.096275
+/benchmarks/IJCAR2018/test_v5_r10_vr1_c1_s13516.smt2
+	times:	[5.620876, 5.539052, 5.504041]
+	minmax:	0.021034
+	std:	0.048957
+/benchmarks/IJCAR2018/div2.c.50.smt2
+	times:	[9.726665, 9.372557, 9.186554]
+	minmax:	0.057284
+	std:	0.224031
+/benchmarks/IJCAR2018/cos_polynomial_true-unreach-call.c_9.smt2
+	times:	[1.677244, 1.580481, 1.647491]
+	minmax:	0.059180
+	std:	0.040468
+/benchmarks/IJCAR2018/e2_2.c.smt2
+	times:	[1.906034, 1.920125, 1.921089]
+	minmax:	0.007859
+	std:	0.006881
+/benchmarks/IJCAR2018/test_v5_r10_vr1_c1_s19145.smt2
+	times:	[4.849487, 4.83214, 4.874189]
+	minmax:	0.008666
+	std:	0.017254
+/benchmarks/IJCAR2018/test_v5_r5_vr1_c1_s16138.smt2
+	times:	[3.28892, 3.460109, 3.4335]
+	minmax:	0.050436
+	std:	0.075216
+/benchmarks/IJCAR2018/test_v5_r5_vr5_c1_s2800.smt2
+	times:	[7.589956, 7.491509, 7.509971]
+	minmax:	0.013073
+	std:	0.042727
+/benchmarks/IJCAR2018/e1_1.c.smt2
+	times:	[1.389025, 1.445298, 1.330421]
+	minmax:	0.082750
+	std:	0.046902
+/benchmarks/IJCAR2018/div2.c.20.smt2
+	times:	[3.9578, 3.921891, 4.053589]
+	minmax:	0.033109
+	std:	0.055587
+/benchmarks/IJCAR2018/newton.6.1.i.smt2
+	times:	[2.049577, 2.036223, 2.23078]
+	minmax:	0.092403
+	std:	0.088735
+/benchmarks/IJCAR2018/newton.8.1.i.smt2
+	times:	[2.017625, 2.017078, 2.042287]
+	minmax:	0.012445
+	std:	0.011757
+/benchmarks/IJCAR2018/newton.8.2.i.smt2
+	times:	[5.304294, 5.245231, 5.108059]
+	minmax:	0.037599
+	std:	0.082201
+/benchmarks/IJCAR2018/test_v3_r3_vr10_c1_s14052.smt2
+	times:	[1.987439, 1.969191, 1.940986]
+	minmax:	0.023630
+	std:	0.019109
+/benchmarks/IJCAR2018/mult2.c.40.smt2
+	times:	[6.702485, 6.881305, 6.853707]
+	minmax:	0.026249
+	std:	0.078603
+/benchmarks/IJCAR2018/square_and_power_inverse.smt2
+	times:	[0.788077, 0.864032, 0.765434]
+	minmax:	0.122353
+	std:	0.042168
+/benchmarks/IJCAR2018/e1.c.smt2
+	times:	[1.453592, 1.481553, 1.395203]
+	minmax:	0.059822
+	std:	0.035974
+/benchmarks/IJCAR2018/test_v7_r7_vr10_c1_s24535.smt2
+	times:	[13.212874, 13.204288, 12.972841]
+	minmax:	0.018281
+	std:	0.111184
+/benchmarks/IJCAR2018/div3.c.50.smt2
+	times:	[10.736007, 10.641805, 10.740639]
+	minmax:	0.009232
+	std:	0.045538
+/benchmarks/IJCAR2018/mult2.c.10.smt2
+	times:	[2.494762, 2.54345, 2.537482]
+	minmax:	0.019281
+	std:	0.021682
+/benchmarks/IJCAR2018/mult1.c.30.smt2
+	times:	[4.798885, 4.66168, 4.698287]
+	minmax:	0.029071
+	std:	0.058009
+/benchmarks/IJCAR2018/test_v7_r7_vr1_c1_s22845.smt2
+	times:	[6.094147, 6.050397, 6.042141]
+	minmax:	0.008579
+	std:	0.022820
+/benchmarks/IJCAR2018/incorrect_reordering.smt2
+	times:	[1.192672, 1.232337, 1.198985]
+	minmax:	0.032835
+	std:	0.017402
+/benchmarks/IJCAR2018/test_v7_r7_vr5_c1_s14675.smt2
+	times:	[8.696149, 8.394331, 8.67703]
+	minmax:	0.035139
+	std:	0.137993
+/benchmarks/IJCAR2018/water_pid_true-unreach-call.c_14.smt2
+	times:	[1.56634, 1.641046, 1.55526]
+	minmax:	0.054037
+	std:	0.038098
+/benchmarks/IJCAR2018/mult2.c.50.smt2
+	times:	[8.06349, 7.86104, 8.138766]
+	minmax:	0.034624
+	std:	0.117277
+/benchmarks/IJCAR2018/e3_2.c.smt2
+	times:	[1.858593, 1.852789, 1.83155]
+	minmax:	0.014636
+	std:	0.011624
+/benchmarks/IJCAR2018/e2a_3.c.smt2
+	times:	[1.593836, 1.555089, 1.502025]
+	minmax:	0.059221
+	std:	0.037633
+/benchmarks/IJCAR2018/filter2_reinit_true-unreach-call.c_7.smt2
+	times:	[1.509301, 1.579864, 1.497907]
+	minmax:	0.053601
+	std:	0.036249
+/benchmarks/IJCAR2018/e2_1.c.smt2
+	times:	[1.772536, 1.766982, 1.764472]
+	minmax:	0.004561
+	std:	0.003369
+/benchmarks/IJCAR2018/test_v3_r3_vr5_c1_s16641.smt2
+	times:	[2.032046, 1.938492, 1.947848]
+	minmax:	0.047422
+	std:	0.042070
+/benchmarks/IJCAR2018/e2a_2.c.smt2
+	times:	[1.613578, 1.631433, 1.598364]
+	minmax:	0.020483
+	std:	0.013515
+/benchmarks/IJCAR2018/test_v5_r10_vr5_c1_s13679.smt2
+	times:	[10.12118, 10.000713, 10.185026]
+	minmax:	0.018245
+	std:	0.076420
+/benchmarks/IJCAR2018/mult2.c.20.smt2
+	times:	[3.721025, 3.861932, 3.700301]
+	minmax:	0.042975
+	std:	0.071809
+/benchmarks/IJCAR2018/sin2.c.2.smt2
+	times:	[2.749499, 2.701438, 2.799234]
+	minmax:	0.035561
+	std:	0.039927
+/benchmarks/IJCAR2018/test_v5_r5_vr10_c1_s5379.smt2
+	times:	[3.151267, 3.234855, 3.253744]
+	minmax:	0.031892
+	std:	0.044529
+/benchmarks/IJCAR2018/mult2.c.30.smt2
+	times:	[4.922333, 4.976383, 4.892972]
+	minmax:	0.016917
+	std:	0.034546
+/benchmarks/IJCAR2018/div.c.3.smt2
+	times:	[1.605822, 1.617795, 1.618629]
+	minmax:	0.007935
+	std:	0.005851
+/benchmarks/IJCAR2018/test_v5_r5_vr1_c1_s14623.smt2
+	times:	[15.335528, 15.52041, 15.58331]
+	minmax:	0.016007
+	std:	0.105163
+/benchmarks/IJCAR2018/test_v3_r3_vr5_c1_s16867.smt2
+	times:	[1.954823, 2.080556, 2.023808]
+	minmax:	0.062252
+	std:	0.051411
+/benchmarks/IJCAR2018/mult1.c.50.smt2
+	times:	[8.298909, 8.212103, 8.449676]
+	minmax:	0.028554
+	std:	0.098153
+/benchmarks/IJCAR2018/test_v3_r8_vr10_c1_s5590.smt2
+	times:	[29.825483, 30.473662, 30.429831]
+	minmax:	0.021432
+	std:	0.295765
+/benchmarks/IJCAR2018/div3.c.20.smt2
+	times:	[4.059892, 4.031896, 4.094969]
+	minmax:	0.015527
+	std:	0.025803
+/benchmarks/IJCAR2018/test_v7_r7_vr5_c1_s3582.smt2
+	times:	[6.159539, 6.127361, 6.181653]
+	minmax:	0.008819
+	std:	0.022291
+/benchmarks/IJCAR2018/newton.4.1.i.smt2
+	times:	[6.482269, 6.482482, 6.516118]
+	minmax:	0.005213
+	std:	0.015907
+/benchmarks/IJCAR2018/newton.7.1.i.smt2
+	times:	[2.081051, 2.129383, 2.086143]
+	minmax:	0.023028
+	std:	0.021684
+/benchmarks/IJCAR2018/div.c.10.smt2
+	times:	[2.409544, 2.488576, 2.502594]
+	minmax:	0.037719
+	std:	0.040962
+/benchmarks/IJCAR2018/cases_2.smt2
+	times:	[1.146318, 1.205711, 1.116079]
+	minmax:	0.077534
+	std:	0.037232
+/benchmarks/IJCAR2018/div2.c.30.smt2
+	times:	[5.62304, 5.526174, 5.79277]
+	minmax:	0.047207
+	std:	0.110184
+/benchmarks/IJCAR2018/newton.7.3.i.smt2
+	times:	[40.326141, 40.690319, 41.016007]
+	minmax:	0.016959
+	std:	0.281783
+/benchmarks/IJCAR2018/mult1.c.10.smt2
+	times:	[2.45395, 2.444522, 2.401701]
+	minmax:	0.021472
+	std:	0.022736
+/benchmarks/IJCAR2018/div3.c.30.smt2
+	times:	[5.210034, 5.128876, 5.269001]
+	minmax:	0.026933
+	std:	0.057444
+/benchmarks/IJCAR2018/div.c.50.smt2
+	times:	[10.984029, 11.081186, 11.175809]
+	minmax:	0.017308
+	std:	0.078296
+/benchmarks/IJCAR2018/mult1.c.40.smt2
+	times:	[6.305947, 6.469043, 6.31964]
+	minmax:	0.025624
+	std:	0.073869
+/benchmarks/IJCAR2018/newton.8.3.i.smt2
+	times:	[3.355148, 3.165525, 3.203964]
+	minmax:	0.058498
+	std:	0.081847
+/benchmarks/IJCAR2018/test_v5_r10_vr5_c1_s13195.smt2
+	times:	[8.482987, 8.678057, 8.620435]
+	minmax:	0.022699
+	std:	0.081829
+/benchmarks/IJCAR2018/test_v7_r7_vr10_c1_s10625.smt2
+	times:	[9.666878, 9.803253, 9.824986]
+	minmax:	0.016191
+	std:	0.069975
+/benchmarks/IJCAR2018/test_v5_r5_vr5_c1_s9855.smt2
+	times:	[4.658302, 4.613481, 4.951467]
+	minmax:	0.071289
+	std:	0.149885
+Max std: 0.952110
+Avg std: 0.086044
+Max minmax: 0.168181
+Avg minmax: 0.039383

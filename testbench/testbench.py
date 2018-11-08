@@ -3,6 +3,7 @@
 import csv
 import datetime
 import itertools
+import logging
 import os
 import pprint
 import sys
@@ -148,34 +149,34 @@ def summarise_results(task):
     ]
 
 
-def launch_benchmarks_no_celery(dir, file_name):
-    timeout = 5
+def launch_benchmarks_no_celery(dir, backend, approximation, timeout, copies,
+                                file_name):
     configs = []
     for f in os.listdir(dir):
-        image = "uppsat:z3"
-        approx = "ijcar"
+        image = "backeman/uppsat:" + backend
         bm = os.path.join(dir, f)
-        print("Adding: %s %s %s" % (image, approx, bm))
-        newConfig = (image, approx, bm)
+        print("Adding: %s %s %s" % (image, approximation, bm))
+        newConfig = (image, approximation, bm)
         configs.append(newConfig)
 
     results = []
 
-    with open(file_name, "w") as fp:
+    with open(file_name, "a") as fp:
         writer = csv.writer(fp)
-        for (image, approximation, benchmark) in configs:
-            (result, runtime), _ = run_experiment(image, timeout,
-                                                  approximation, benchmark)
+        for _ in range(copies):
+            for (image, approximation, benchmark) in configs:
+                (result, runtime), _ = run_experiment_file(
+                    image, timeout, approximation, benchmark)
 
-            writer.writerow([benchmark, result, runtime])
-            results.append([benchmark, result, runtime])
+                writer.writerow([benchmark, result, runtime])
+                results.append([benchmark, result, runtime])
     return results
 
 
-def launch_benchmarks(dir, approximation, timeout, copies):
+def launch_benchmarks(dir, backend, approximation, timeout, copies):
     configs = []
     for f in os.listdir(dir):
-        image = "uppsat:z3"
+        image = "uppsat:" + backend
         bm = os.path.join(dir, f)
         print("Adding: %s %s %s" % (image, approximation, bm))
         newConfig = (image, approximation, bm)
@@ -196,29 +197,43 @@ def launch_benchmarks(dir, approximation, timeout, copies):
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print(
-            "Usage: tesbench.py directory [approximation=ijcar] [timeout=5] [copies=1]"
+            "Usage: tesbench.py directory [backend=z3] [approximation=ijcar] [timeout=5] [copies=1]"
         )
+        print("\tbackend: z3 | mathsat")
+        print("\tapproximation: ijcar | fixedpoint")
         import sys
         sys.exit(0)
+
+    log = logging.getLogger()
+    logging.basicConfig(level=logging.INFO)
 
     directory = sys.argv[1]
 
     # csv_file_name = sys.argv[2]
 
-    approximation = "ijcar"
+    backend = "z3"
     if len(sys.argv) >= 3:
-        approximation = sys.argv[2]
+        backend = sys.argv[2]
+
+    approximation = "ijcar"
+    if len(sys.argv) >= 4:
+        approximation = sys.argv[3]
 
     timeout = 5
-    if len(sys.argv) >= 4:
-        timeout = int(sys.argv[3])
+    if len(sys.argv) >= 5:
+        timeout = int(sys.argv[4])
 
     copies = 1
-    if len(sys.argv) >= 5:
-        copies = int(sys.argv[4])
+    if len(sys.argv) >= 6:
+        copies = int(sys.argv[5])
 
-    groups = launch_benchmarks(directory, approximation, timeout, copies)
-    # group = launch_benchmarks_no_celery(directory, csv_file_name)
-    for g in groups:
-        print(g.id)
+    csv_file_name = "output.csv"
+    if len(sys.argv) >= 7:
+        csv_file_name = sys.argv[6]
+
+    # groups = launch_benchmarks(directory, backend, approximation, timeout,
+    groups = launch_benchmarks_no_celery(directory, backend, approximation,
+                                         timeout, copies, csv_file_name)
+    # for g in groups:
+    #     print(g.id)
     # print(summarise_results(group))
