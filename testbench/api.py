@@ -18,7 +18,7 @@ HTTP_STATUS_ACCEPTED = 202
 HTTP_STATUS_NOT_FOUND = 404
 
 approximation_field = fields.String(
-    example="FIX ME!!!",
+    example="ijcar",
     description="An approximation configuration parameter for UppSAT")
 solver_field = fields.String(
     example="backeman/uppsat:z3", description="A Docker tag for a solver")
