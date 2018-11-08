@@ -4,8 +4,9 @@ import logging
 import pprint
 
 import daiquiri
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, url_for, Response
 from flask_restplus import Api, Resource, fields
+
 
 import testbench
 
@@ -168,11 +169,131 @@ class ExperimentResult(Resource):
         task.forget()
         task.delete()
 
+import requests
+import sys
 
-@api.route('/experiments/<string:id>/table')
+
+def getJSON(id):
+    json = requests.get("http://130.238.29.80/experiments/" + id).json()
+    return json
+
+def extractBenchmarks(json):
+    benchmarks = []
+    for res in json['results']:
+        benchmarks.append(res['benchmark'])
+    return benchmarks
+    
+
+def jsonsToDicts(jsons, benchmarks):
+    dicts = []
+    for j in jsons:
+        d = {}
+        for r in j['results']:
+            d[r['benchmark']] = (r['result'], r['runtime'])
+        dicts.append(d)
+    return dicts
+
+def jsonToDict(json):
+    d = {}
+    for r in json['results']:
+        d[r['benchmark']] = (r['result'], r['runtime'])
+    return d
+
+
+def table(benchmarks, titles, dicts):
+    top = ""
+    top += "<html>\n"
+
+    style = """<style>
+#data {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+#data td, #data th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+#data tr:nth-child(even){background-color: #f2f2f2;}
+
+#data tr:hover {background-color: #ddd;}
+
+#data th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #4CAF50;
+    color: white;
+}
+</style>"""
+    
+    header = "<table id=\"data\">\n"
+    header += "<tr><th>Benchmarks</th>\n"
+    for t in titles:
+        header += "<th>" + t + "</th>\n"
+    header += "</tr>\n"
+
+    body = ""
+    for b in benchmarks:
+        best = -1
+        besttime = -1
+        for i in range(len(dicts)):
+            time = dicts[i][b]
+            if time != "T/O" and (besttime == -1 or time < besttime):
+                besttime = time
+                best = i
+        
+        body += "<tr>\n"
+        body += "<td>" + b + "</td>\n"
+        results = []
+        for i in range(len(dicts)):
+            time = dicts[i][b]
+            if i == best:
+                body += "<td><b>" + str(time) + "</b></td>\n"
+            else:
+                body += "<td>" + str(time) + "</td>\n"
+        body += "</tr>\n"
+
+    footer = "</table>\n"
+    footer += "</html>\n"
+
+    return (top + style + header + body + footer)
+        
+@api.route('/experiments/<string:id1>/<string:id2>/table')
 class ExperimentResultTable(Resource):
-    def get(self, id):
-        pass
+    
+    def get(self, id1, id2):
+        id1res = testbench.summarise_results(testbench.celery_app.GroupResult.restore(id1))
+        id2res = testbench.summarise_results(testbench.celery_app.GroupResult.restore(id2))
+
+        benchmarks = []
+        
+        dict1 = {}
+        for (result, runtime), (solver, approx, benchmark) in id1res:
+            benchmarks.append(benchmark)
+            if (result == "SAT" or result == "UNSAT"):
+                dict1[benchmark] = runtime
+            else:
+                dict1[benchmark] = "T/O"
+
+        dict2 = {}
+        for (result, runtime), (solver, approx, benchmark) in id2res:
+            if (result == "SAT" or result == "UNSAT"):
+                dict2[benchmark] = runtime
+            else:
+                dict2[benchmark] = "T/O"
+
+
+        log.info("html")
+        html = table(benchmarks, [id1, id2], [dict1, dict2])
+        log.info(html)        
+                
+        r = Response(html, mimetype="text/html")                
+                
+        r.status_code = 200
+        return r
 
 
 if __name__ == '__main__':

@@ -1,3 +1,5 @@
+.gitignore
+*~
 *.aux
 .DS_Store
 *.bbl
@@ -9,4 +11,17 @@
 *.run.xml
 /report/report.pdf
 /report/auto
-/testbench/__pycache__/testbench.cpython-36.pyc
+pyapi/**
+pydocker/**
+pystack/**
+pyplots/**
+
+testbench/__pycache__/
+
+notes
+
+testbench/#plot\.py#
+
+\#mathsat\.data#
+
+\.#notes
