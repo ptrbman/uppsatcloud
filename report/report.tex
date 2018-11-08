@@ -230,7 +230,19 @@ We executed the experiment \fixme{five bazillion} times over a period of
 
 \section{Discussion}
 
-\fixme{\lipsum[66]}
+\subsection{Scaling Up}
+
+\subsection{Future Work}
+
+Perhaps the most glaring omission in this version of \testbench{} is its lack of
+facilities for uploading new benchmarks and discovering available benchmarks.
+This concept, being mostly about placing the right files in the right folder,
+was considered orthogonal to the concept of \emph{running} the benchmarks, and
+thus omitted. It was assumed that anyone operating a \testbench{} setup would
+also be able to copy the desired benchmark set onto the master server. A
+reasonable convenience feature in a production-ready version of the system
+would, however, probably expose a separate set of REST endpoints controlling the
+set of installed benchmarks.
 
 \section{Conclusion}
 
