@@ -11,6 +11,7 @@ import uuid
 from collections import Counter
 from contextlib import contextmanager
 
+import logging
 import celery
 import dateparser
 import docker
@@ -159,29 +160,27 @@ def summarise_results(task):
     ]
 
 
-def launch_benchmarks_no_celery(dir, file_name):
-    timeout = 5
+def launch_benchmarks_no_celery(dir, backend, approximation, timeout, copies, file_name):
     configs = []
     for f in os.listdir(dir):
-        image = "uppsat:z3"
-        approx = "ijcar"
+        image = "backeman/uppsat:" + backend
         bm = os.path.join(dir, f)
-        print("Adding: %s %s %s" % (image, approx, bm))
-        newConfig = (image, approx, bm)
+        print("Adding: %s %s %s" % (image, approximation, bm))
+        newConfig = (image, approximation, bm)
         configs.append(newConfig)
 
     results = []
 
-    with open(file_name, "w") as fp:
+    with open(file_name, "a") as fp:
         writer = csv.writer(fp)
-        for (image, approximation, benchmark) in configs:
-            (result, runtime), _ = run_experiment_file(
-                image, timeout, approximation, benchmark)
+        for _ in range(copies): 
+            for (image, approximation, benchmark) in configs:
+                (result, runtime), _ = run_experiment_file(
+                    image, timeout, approximation, benchmark)
 
-            writer.writerow([benchmark, result, runtime])
-            results.append([benchmark, result, runtime])
-    return results
-
+                writer.writerow([benchmark, result, runtime])
+                results.append([benchmark, result, runtime])
+    return results    
 
 def launch_benchmarks(dir, backend, approximation, timeout, copies):
     configs = []
@@ -213,6 +212,9 @@ if __name__ == '__main__':
         import sys
         sys.exit(0)
 
+    log = logging.getLogger()
+    logging.basicConfig(level=logging.INFO)
+        
     directory = sys.argv[1]
 
     # csv_file_name = sys.argv[2]
@@ -233,8 +235,12 @@ if __name__ == '__main__':
     if len(sys.argv) >= 6:
         copies = int(sys.argv[5])
 
-    groups = launch_benchmarks(directory, backend, approximation, timeout, copies)    
-    # group = launch_benchmarks_no_celery(directory, csv_file_name)
-    for g in groups:
-        print(g.id)
+    csv_file_name = "output.csv"       
+    if len(sys.argv) >= 7:
+        csv_file_name = sys.argv[6]
+
+    # groups = launch_benchmarks(directory, backend, approximation, timeout,
+    groups = launch_benchmarks_no_celery(directory, backend, approximation, timeout, copies, csv_file_name)     
+    # for g in groups:
+    #     print(g.id)
     # print(summarise_results(group))
