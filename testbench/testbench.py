@@ -21,6 +21,7 @@ from docker import APIClient
 CELERY_BROKER_URL = os.environ['CELERY_BROKER_URL']
 CELERY_RESULT_BACKEND = os.environ['CELERY_RESULT_BACKEND']
 BENCHMARK_ROOT = "/benchmarks"
+SHARED_DATA_VOLUME_NAME = "data-volume"
 
 celery_app = celery.Celery(
     "testbench", broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKEND)
@@ -31,7 +32,13 @@ __version__ = 0.1
 
 
 def uppsat(docker_image, benchmark, timeout, approximation):
-    ### RUN UppSAT
+    """
+    Run the UppSAT docker image specified by docker_image with the benchmark
+    specified by benchmark under the provided timeout and approximation level.
+    `benchmark` is assumed to be the name of a SMTLib-formatted file stored in
+    the shared data volume.
+    """
+
     client = docker.from_env()
     apiclient = APIClient()
     log.info("Running UppSAT on benchmark {}".format(benchmark))
@@ -40,7 +47,13 @@ def uppsat(docker_image, benchmark, timeout, approximation):
     client.images.pull(docker_image)
 
     # Here we have an absolute path
-    benchVolume = {'data-volume': {'bind': BENCHMARK_ROOT, 'mode': 'ro'}}
+    benchVolume = {
+        SHARED_DATA_VOLUME_NAME: {
+            'bind': BENCHMARK_ROOT,
+            'mode': 'ro'
+        }
+    }
+
     env = {
         'INPUT': os.path.join(BENCHMARK_ROOT, benchmark),
         'TIMEOUT': timeout,
@@ -230,8 +243,8 @@ if __name__ == '__main__':
         csv_file_name = sys.argv[6]
 
     # groups = launch_benchmarks(directory, backend, approximation, timeout,
-    groups = launch_benchmarks_no_celery(directory, backend, approximation,
-                                         timeout, copies, csv_file_name)
+    launch_benchmarks_no_celery(directory, backend, approximation, timeout,
+                                copies, csv_file_name)
     # for g in groups:
     #     print(g.id)
     # print(summarise_results(group))
