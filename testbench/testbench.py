@@ -154,9 +154,8 @@ def launch_benchmarks_no_celery(dir, backend, approximation, timeout, copies,
     configs = []
     for f in os.listdir(dir):
         image = "backeman/uppsat:" + backend
-        bm = os.path.join(dir, f)
-        print("Adding: %s %s %s" % (image, approximation, bm))
-        newConfig = (image, approximation, bm)
+        print("Adding: %s %s %s" % (image, approximation, f))
+        newConfig = (image, approximation, f)
         configs.append(newConfig)
 
     results = []
@@ -165,8 +164,8 @@ def launch_benchmarks_no_celery(dir, backend, approximation, timeout, copies,
         writer = csv.writer(fp)
         for _ in range(copies):
             for (image, approximation, benchmark) in configs:
-                (result, runtime), _ = run_experiment_file(
-                    image, timeout, approximation, benchmark)
+                (result, runtime), _ = run_experiment(image, timeout,
+                                                      approximation, benchmark)
 
                 writer.writerow([benchmark, result, runtime])
                 results.append([benchmark, result, runtime])
@@ -177,8 +176,7 @@ def launch_benchmarks(dir, backend, approximation, timeout, copies):
     configs = []
     for f in os.listdir(dir):
         image = "uppsat:" + backend
-        bm = os.path.join(dir, f)
-        print("Adding: %s %s %s" % (image, approximation, bm))
+        print("Adding: %s %s %s" % (image, approximation, f))
         newConfig = (image, approximation, bm)
         configs.append(newConfig)
 
