@@ -49,6 +49,3 @@ services:
         CELERY_BROKER_URL: amqp://rabbitmq
     ports:
         - "5555:5555"
-
-volumes:
-  data-volume: {}
