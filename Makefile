@@ -11,6 +11,8 @@ stack:
 	openstack stack create \
 		--wait \
 		--parameter nr_workers=1 \
+		--parameter docker_user=${DOCKER_USER} \
+		--parameter docker_password=${DOCKER_PASSWORD} \
 		--template stack.yaml ${STACK_NAME}
 
 	openstack stack output show ${STACK_NAME} \

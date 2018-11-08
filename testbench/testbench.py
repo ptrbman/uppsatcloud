@@ -22,6 +22,8 @@ CELERY_BROKER_URL = os.environ['CELERY_BROKER_URL']
 CELERY_RESULT_BACKEND = os.environ['CELERY_RESULT_BACKEND']
 BENCHMARK_ROOT = "/benchmarks"
 SHARED_DATA_VOLUME_NAME = "data-volume"
+DOCKER_USERNAME = os.environ['DOCKER_USERNAME']
+DOCKER_PASSWORD = os.environ['DOCKER_PASSWORD']
 
 celery_app = celery.Celery(
     "testbench", broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKEND)
@@ -43,7 +45,7 @@ def uppsat(docker_image, benchmark, timeout, approximation):
     apiclient = APIClient()
     log.info("Running UppSAT on benchmark {}".format(benchmark))
 
-    client.login(username="backeman", password="uppsat")
+    client.login(username=DOCKER_USERNAME, password=DOCKER_PASSWORD)
     client.images.pull(docker_image)
 
     # Here we have an absolute path

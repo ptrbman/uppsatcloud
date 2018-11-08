@@ -34,6 +34,14 @@ parameters:
     type: string
     description: The IP number or host name of the master
 
+  docker_user:
+    type: string
+    description: User name for logging on to Dockerhub
+
+  docker_password:
+    type: string
+    description: Password for logging on to Dockerhub
+
 
 resources:
   worker_port:
@@ -71,8 +79,11 @@ resources:
 
             echo CELERY_BROKER_URL="amqp://project:project@$master_host/" >> /home/ubuntu/env
             echo CELERY_RESULT_BACKEND="redis://$master_host/" >> /home/ubuntu/env
+            echo DOCKER_USER="$docker_user" >> /home/ubuntu/env
+            echo DOCKER_PASSWORD="$docker_password" >> /home/ubuntu/env
 
-            docker login -u backeman -p uppsat
+            # Needed to fetch the worker container
+            docker login -u $docker_user -p $docker_password
 
             # Add the NFS resource as a volume
             docker volume create \
@@ -80,7 +91,7 @@ resources:
             --opt o=addr=master,ro \
             --opt device=:$mountpoint data-volume
 
-            # log on to dockercat 
+            # Run the worker
             docker run -d --restart=always --name=worker \
             --env-file=/home/ubuntu/env \
             --volume /var/run/docker.sock:/var/run/docker.sock \
@@ -90,6 +101,8 @@ resources:
           params:
             $master_host: {get_param: master_host}
             $mountpoint: {get_param: mountpoint}
+            $docker_user: {get_param: docker_user}
+            $docker_password: {get_param: docker_password}
 
 outputs:
   OS::stack_id:
