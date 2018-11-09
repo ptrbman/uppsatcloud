@@ -185,12 +185,12 @@ def launch_benchmarks_no_celery(dir, backend, approximation, timeout, copies,
     return results    
 
 
-def launch_benchmarks(dir, backend, approximation, timeout, copies):
+def launch_benchmarks(directory, backend, approximation, timeout, copies):
     configs = []
-    for f in os.listdir(dir):
-        image = "uppsat:" + backend
+    for f in os.listdir(directory):
+        image = "backeman/uppsat:" + backend
         print("Adding: %s %s %s" % (image, approximation, f))
-        newConfig = (image, approximation, bm)
+        newConfig = (image, approximation, backend)
         configs.append(newConfig)
 
     groups = []
@@ -208,7 +208,7 @@ def launch_benchmarks(dir, backend, approximation, timeout, copies):
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print(
-            "Usage: tesbench.py directory [backend=z3] [approximation=ijcar] [timeout=5] [copies=1]"
+            "Usage: tesbench.py directory [backend=z3] [approximation=ijcar] [timeout=5] [copies=1] [local=true]"
         )
         print("\tbackend: z3 | mathsat")
         print("\tapproximation: ijcar | fixedpoint")
@@ -242,9 +242,21 @@ if __name__ == '__main__':
     if len(sys.argv) >= 7:
         csv_file_name = sys.argv[6]
 
+    local = False
+    if len(sys.argv) >= 8:
+        if sys.argv[7] == "true":
+            local = True
+        elif sys.argv[7] == "false":
+            local = False
+
     # groups = launch_benchmarks(directory, backend, approximation, timeout,
-    launch_benchmarks_no_celery(directory, backend, approximation, timeout,
-                                copies, csv_file_name)
-    # for g in groups:
-    #     print(g.id)
+    if (local):
+        print("Running locally")
+        launch_benchmarks_no_celery(directory, backend, approximation, timeout,
+                                    copies, csv_file_name)
+    else:
+        print("Pushing to Celery")
+        groups = launch_benchmarks(directory, backend, approximation, timeout, copies)
+        for g in groups:
+            print(g.id)
     # print(summarise_results(group))
