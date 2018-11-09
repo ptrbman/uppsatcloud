@@ -295,6 +295,19 @@ We also group the first three runs and last three runs (using the same configura
 \captionof{table}{Statistics of error measurements (in seconds).}\label{tbl:one}
 \end{Figure}
 
+
+\subsection{Scaling Comparison}
+
+A single-trial experiment was submitted a number of times, both proportional to
+the number of workers, and on its own 75~times. The complete runtime, measured
+from a script that submits the job via the REST API and then polls it until
+completion and records the time, can be seen in Figure~\ref{fig:scaling}.
+\begin{Figure}
+  \centering \includegraphics[width=0.9\textwidth]{scaling_graph}
+  \captionof{figure}{The full runtime to complete a number of experiments in
+    \testbench{}.}\label{fig:scaling}
+\end{Figure}
+
 \section{Discussion}
 By observing the various measurements we can see that the average
 effect of running on the virtual operating system is quite low (almost
