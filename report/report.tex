@@ -247,7 +247,7 @@ through Celery first.
   \centering
   \begin{tabular}{|l|c|c|}
     \hline
-    & \emph{cloud} & \emph{in-house} \\
+    & \emph{cloud-1} & \emph{in-house} \\
   \hline
   Average runtime &  13.34 & 17.36\\
   \hline
@@ -267,13 +267,13 @@ Furthermore, we run the set of benchmarks used in \cite{uppsat} six times to mea
   \centering
 \begin{tabular}{|l|c|l|c|}
   \hline
-  \multicolumn{2}{|c|}{z3} & \multicolumn{2}{c|}{mathsat} \\
+  \multicolumn{2}{|c|}{\emph{cloud-1}} & \multicolumn{2}{c|}{\emph{in-house}} \\
   \hline
-  Run 1 &  572.9 & Run 4 & 546.2 \\
+  Run 1 &  572.9 & Run 1 & 2379.9 \\
   \hline
-  Run 2 & 573.2 & Run 5 & 548.6 \\
+  Run 2 & 573.2 & Run 2 & 2312.2 \\
   \hline
-  Run 3 & 572.9 & Run 6 & 552.4 \\
+  Run 3 & 572.9 & Run 3 & 2259.2 \\
   \hline      
 \end{tabular}
 \captionof{table}{Runtime of the complete set of benchmarks (in seconds).}\label{tbl:complete}
@@ -285,11 +285,11 @@ We also group the first three runs and last three runs (using the same configura
   \centering
   \begin{tabular}{|l|c|c|}
     \hline
-    & Run 1-3 & Run 4-6 \\
+    & \emph{cloud-1} & \emph{in-house} \\
   \hline
-  Average standard deviation &  0.086 & 0.084 \\
+  Average COV & 0.017 & 0.038 \\
   \hline
-  Maximum standard deviation  & 0.95 & 0.39 \\
+  Maximum COV  & 0.075 & 0.11 \\
   \hline
 \end{tabular}
 \captionof{table}{Statistics of error measurements (in seconds).}\label{tbl:one}
