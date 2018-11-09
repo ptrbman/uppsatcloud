@@ -165,6 +165,11 @@ the manual set-up used earlier by the authors and is a proof of
 concept that it is easy to implement arbitrary visualisation of
 results in this kind of framework.
 
+\begin{Figure}
+  \centering \includegraphics[width=0.9\textwidth]{table_view}
+  \captionof{figure}{The table view for two experiments.}\label{fig:table_view}
+\end{Figure}
+
 \subsection{System Design and Implementation}
 The implementation is based on the Celery task queue~\cite{celery}, and packaged
 in Docker~\cite{docker} containers. The front-end REST API receives input from
@@ -194,7 +199,7 @@ the docker container in this work.
 
 \testbench{} is configured in a OpenStack cloud environment~\cite{openstack},
 using HEAT orchestration templates for provisioning. The base VMs are running
-Ubuntu~\fixme{18.08}. RabbitMQ, Redis, and the front-end API are all installed
+Ubuntu~18.04. RabbitMQ, Redis, and the front-end API are all installed
 on a (size \texttt{small}) separate VM (called the master) in order to avoid
 interference with the experiments. Each worker VM (\texttt{medium}) receives the
 same configuration; a clean installation of the Docker community edition, the
@@ -326,12 +331,17 @@ To see how well our system would scale, a single-trial experiment was
 submitted a number of times, both proportional to the number of
 workers, and on its own 75~times. The complete runtime, measured from
 a script that submits the job via the REST API and then polls it until
-completion and records the time, can be seen in
-Figure~\ref{fig:scaling}.
+completion and records the time, can be seen in Figures~\ref{fig:scaling} and~\ref{fig:scaling_large}.
 \begin{Figure}
   \centering \includegraphics[width=0.9\textwidth]{scaling_graph}
   \captionof{figure}{The full runtime to complete a number of experiments in
-    \testbench{}.}\label{fig:scaling}
+    \testbench{} (1--2 workers).}\label{fig:scaling}
+\end{Figure}
+
+\begin{Figure}
+  \centering \includegraphics[width=0.9\textwidth]{scaling_graph_large}
+  \captionof{figure}{The full runtime to complete a number of experiments in
+    \testbench{} (3, 6, and 10 workers).}\label{fig:scaling_large}
 \end{Figure}
 
 \section{Discussion}
