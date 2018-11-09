@@ -182,7 +182,7 @@ def launch_benchmarks_no_celery(dir, backend, approximation, timeout, copies,
 
                 writer.writerow([time.time(), benchmark, result, runtime])
                 results.append([time.time(), benchmark, result, runtime])
-    return results    
+    return results
 
 
 def launch_benchmarks(dir, backend, approximation, timeout, copies):
@@ -203,6 +203,53 @@ def launch_benchmarks(dir, backend, approximation, timeout, copies):
         groups.append(group)
 
     return groups
+
+
+def get_workers():
+    return list(celery_app.control.inspect().stats().keys())
+
+
+def worker_active(worker_name):
+    active_queues = [q.get('name', None) for q in celery_app.control\
+                     .inspect([worker_name])\
+                     .active_queues()[worker_name]]
+    return "celery" in active_queues
+
+
+def activate_worker(worker_name):
+    log.info("Activating {}".format(worker_name))
+    return celery_app.control.add_consumer(
+        'celery', reply=True, destination=[worker_name])
+
+
+def deactivate_worker(worker_name):
+    log.info("Deactivating {}".format(worker_name))
+    return celery_app.control.cancel_consumer(
+        'celery', reply=True, destination=[worker_name])
+
+
+def scale_workers(target_nr):
+    workers = get_workers()
+    active_workers = [w for w in workers if worker_active(w)]
+    inactive_workers = [w for w in workers if not worker_active(w)]
+
+    log.info("Active workers: {}, inactive workers: {}".format(
+        ", ".join(active_workers), ", ".join(inactive_workers)))
+
+    worker_delta = target_nr - len(active_workers)
+    if worker_delta == 0:
+        return
+
+    if worker_delta > 0:
+        if len(inactive_workers) < worker_delta:
+            raise Exception("Wanted {} more workers, we only have {}".format(
+                worker_delta, len(inactive_workers)))
+
+        for worker in inactive_workers[:worker_delta]:
+            activate_worker(worker)
+    else:
+        for worker in active_workers[:abs(worker_delta)]:
+            deactivate_worker(worker)
 
 
 if __name__ == '__main__':

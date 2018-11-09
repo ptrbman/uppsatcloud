@@ -2,11 +2,12 @@
 
 import logging
 import pprint
+import sys
 
 import daiquiri
-from flask import Flask, redirect, url_for, Response
+import requests
+from flask import Flask, Response, redirect, url_for
 from flask_restplus import Api, Resource, fields
-
 
 import testbench
 
@@ -169,20 +170,18 @@ class ExperimentResult(Resource):
         task.forget()
         task.delete()
 
-import requests
-import sys
-
 
 def getJSON(id):
     json = requests.get("http://130.238.29.80/experiments/" + id).json()
     return json
+
 
 def extractBenchmarks(json):
     benchmarks = []
     for res in json['results']:
         benchmarks.append(res['benchmark'])
     return benchmarks
-    
+
 
 def jsonsToDicts(jsons, benchmarks):
     dicts = []
@@ -192,6 +191,7 @@ def jsonsToDicts(jsons, benchmarks):
             d[r['benchmark']] = (r['result'], r['runtime'])
         dicts.append(d)
     return dicts
+
 
 def jsonToDict(json):
     d = {}
@@ -228,7 +228,7 @@ def table(benchmarks, titles, dicts):
     color: white;
 }
 </style>"""
-    
+
     header = "<table id=\"data\">\n"
     header += "<tr><th>Benchmarks</th>\n"
     for t in titles:
@@ -244,7 +244,7 @@ def table(benchmarks, titles, dicts):
             if time != "T/O" and (besttime == -1 or time < besttime):
                 besttime = time
                 best = i
-        
+
         body += "<tr>\n"
         body += "<td>" + b + "</td>\n"
         results = []
@@ -260,16 +260,18 @@ def table(benchmarks, titles, dicts):
     footer += "</html>\n"
 
     return (top + style + header + body + footer)
-        
+
+
 @api.route('/experiments/<string:id1>/<string:id2>/table')
 class ExperimentResultTable(Resource):
-    
     def get(self, id1, id2):
-        id1res = testbench.summarise_results(testbench.celery_app.GroupResult.restore(id1))
-        id2res = testbench.summarise_results(testbench.celery_app.GroupResult.restore(id2))
+        id1res = testbench.summarise_results(
+            testbench.celery_app.GroupResult.restore(id1))
+        id2res = testbench.summarise_results(
+            testbench.celery_app.GroupResult.restore(id2))
 
         benchmarks = []
-        
+
         dict1 = {}
         for (result, runtime), (solver, approx, benchmark) in id1res:
             benchmarks.append(benchmark)
@@ -285,15 +287,28 @@ class ExperimentResultTable(Resource):
             else:
                 dict2[benchmark] = "T/O"
 
-
         log.info("html")
         html = table(benchmarks, [id1, id2], [dict1, dict2])
-        log.info(html)        
-                
-        r = Response(html, mimetype="text/html")                
-                
+        log.info(html)
+
+        r = Response(html, mimetype="text/html")
+
         r.status_code = 200
         return r
+
+
+@api.route('/config/workers')
+class WorkerCount(Resource):
+    def get(self):
+        return len(
+            [w for w in testbench.get_workers() if testbench.worker_active(w)])
+
+
+@api.route('/config/workers/<string:nr_workers>')
+class WorkerCount(Resource):
+    def put(self, nr_workers):
+        testbench.scale_workers(int(nr_workers))
+        return {}
 
 
 if __name__ == '__main__':
