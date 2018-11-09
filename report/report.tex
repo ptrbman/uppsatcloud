@@ -13,47 +13,42 @@
 \maketitle
 
 \begin{abstract}
-  This paper describes a system for efficiently
-     automating and scheduling a series of compute-heavy benchmarks, as
-     exemplified by the SMT~solver {\uppsat{}}, using Docker containers on a
-     virtualised Cloud platform based on OpenStack. It finds that switching to
-     virtualised benchmarking immediately solves the $P=NP$ problem, cures
-     cancer, and brings about world peace, in addition to providing an
-     aesthetically perfect solution.
+  In this paper we describe a system for efficiently automating and
+  scheduling a series of compute-heavy benchmarks, as exemplified by
+  the SMT~solver {\uppsat{}}, using Docker containers on a virtualised
+  Cloud platform based on OpenStack. We give an overview of the
+  architecure and measure the variance introduced by moving from an
+  in-house physical machine to a cloud-based virtual machine.
 \end{abstract}
 
 \section{Background}
 
+Satisfiability Modulo Theories (SMT) is the problem of solving Boolean
+formulas where each propositional atom (in addition of being either
+true or false) has an interpretation in some theory (e.g., linear
+arithmetic, bit-vectors). In many different areas, satisfying
+assignments (called solutions) for these kind of formulas are sought
+for, one important use case being verification of hardware and
+software. For example, in model checking, a SMT~formula is generated
+such that a solution corresponds to a hardware or software
+bug. Therefore, efficient SMT-solvers are highly desirable and there
+exists much research in this field (see e.g.,~\cite{sathandbook} for
+an introduction).
 
-
-The Satisfiability Modulo Theories (SMT) is the problem of solving
-Boolean formulas where each propositional atom (in addition of being
-either true or false) has an interpretation in some theory (e.g.,
-linear arithmetic, bit-vectors). In many different areas, satisfying
-assignments (solutions) for these kind of formulas are sought for, one
-important use case being verification of hardware and software. For
-example, in model checking, a SMT~formula is generated such that a
-solution corresponds to a hardware or software bug. Therefore,
-efficient SMT-solvers are highly desirable and there exists much
-research in this field (see e.g.,~\cite{sathandbook} for an
-introduction).
-
-The satisfiability problem (solving Boolean formulas) is probably the
-most famous NP-complete problem~\cite{satnp}, and SMT solvers must
-additionaly use a decision procedure for the various background
-theories, which results in a combination which is highly
-complex. Therefore, prediciting the performance changes when trying
-different strategies can be very hard, and usually extensive
-benchmarking is used to evaluate new techniques.
+Only solving Boolean formulas (ignoring theories), the satisfiability
+problem (SAT), is probably the most famous NP-complete
+problem~\cite{satnp}, and SMT solvers must in additionaly use a
+decision procedure for the various background theories, which results
+in a combination which is highly complex. Therefore, prediciting the
+performance changes when trying different strategies can be very hard,
+and usually extensive benchmarking is used to evaluate new techniques.
 
 These benchmarks are often run on local clusters or even local
 machines in sequential order, leading to long waits from start until a
 complete picture of the effects of the evaluated modifications are
 yielded. By instead using a cloud approach, where not only the number
 of machines could be scaled, but also dynamic load-balancing could be
-used, this waiting time could be greatly reduced.
-
-%% Maybe a reference to ``cloud approach'' above. But I am scared of picking a paper, since here they will actually now which papers are good :)
+used, this waiting time can be greatly reduced.
 
 In this paper, we investigate how a SMT~solver can be adapted to allow
 benchmarking in a cloud environment, with \uppsat{}~\cite{uppsat} as a
@@ -64,14 +59,11 @@ case study. The contribution of this paper are:
     complete continuous integration pipeline from code pushed to Git
     to it being benchmarked in the cloud.
     
-  \item a Representational State Transfer (REST) API controlling the
-    testbed environment
-    
   \item a modular system of Docker containers~\cite{docker} which
-    packages \uppsat{} for easy deployment
+    packages \uppsat{} for easy deployment.
 
   \item an evaluation of how virtualisation affects measurement errors
-    of benchmarks
+    of benchmarks.
 \end{itemize}
 
 We argue that the use of Docker serves the dual purpose of enhancing both
@@ -90,7 +82,6 @@ have been measured to be above 20\% in multiple studies
 To alleviate this, there have been ideas on how to create
 micro-benchmarks and use certain features to try and predict
 performance \cite{estimatingCloud}.
-
 
 \section{\uppsat{}}
 In this project we use the \uppsat{} SMT
@@ -123,9 +114,9 @@ see~\cite{uppsat}.
   \captionof{figure}{\uppsat{}\ composition}\label{fig:uppsat}
 \end{Figure}
 
-\subsection{Instances}\label{sec:instances}
-We will call the smallest unit of trial within an \emph{experiment} an
-\emph{instance} and it consists of four configuration parameters:
+\subsection{Trials}\label{sec:trials}
+We will call the smallest unit within an \emph{experiment} a
+\emph{trial} and it consists of four configuration parameters:
 \begin{itemize}
 \item an approximation strategy
 \item an \uppsat{}\ back-end
@@ -133,9 +124,12 @@ We will call the smallest unit of trial within an \emph{experiment} an
 \item a SMT problem (a benchmark)
 \end{itemize}
 
-We will not go into detail the different possible arguments here but will
-quickly mention that in this study we will evaluate two approximation strategies
-over about one hundred SMT~problems across a fixed back-end and timeout.
+We will not go into detail the different possible arguments here but
+will quickly mention that in this study we will evaluate only one
+approximation strategy over about one hundred SMT~problems across a
+fixed back-end and timeout. There is support for more variation,
+however we have noted no great variation in the variance of runtimes
+between different configurations.
 
 \section{\testbench{}}
 
@@ -149,25 +143,32 @@ by worker nodes. The system takes as its input:
   \item a set of SMT problems
 \end{itemize}
 \testbench{} then performs the experiment of evaluating the cross product of all
-these configurations (the instances, as defined in Section~\ref{sec:instances})
+these configurations (the trials, as defined in Section~\ref{sec:trials})
 and reports the results. This corresponds to a complete evaluation of the system
-across all possible combinations of options.
+across all possible combinations of options. 
 
 \subsection{REST API Design}
 
-This functionality is represented as two REST endpoints \texttt{/experiment},
-and \texttt{/experiment/<ID>}. A \texttt{POST}~request (illustrating
-non-idempotency) to \texttt{/experiment} will start a new experiment, assigning
-it a unique ID, and redirecting the user to \texttt{/experiment/<ID>}, where it
-can be queried for its status (using a \texttt{GET}~request). Experiments can
-then be canceled (if running) and deleted via the \texttt{DELETE}~request to
-their endpoint.
+The functionality is represented as two REST endpoints
+\texttt{/experiment}, and \texttt{/experiment/<ID>}. A
+\texttt{POST}~request (illustrating non-idempotency) to
+\texttt{/experiment} will start a new experiment, assigning it a
+unique ID, and redirecting the user to \texttt{/experiment/<ID>},
+where it can be queried for its status (using a
+\texttt{GET}~request). Experiments can then be canceled (if running)
+and deleted via the \texttt{DELETE}~request to their endpoint. There
+is also a feature of constructing a table comparing two different
+experiments which are running on the same set of benchmarks (but with
+different configurations) by using the
+\texttt{/expreiment/<ID1>/<ID2>}~endpoint. This mimics a feature of
+the manual set-up used earlier by the authors and is a proof of
+concept that it is easy to implement arbitrary visualisation of
+results in this kind of framework.
 
 \subsection{System Design and Implementation}
-
 The implementation is based on the Celery task queue~\cite{celery}, and packaged
 in Docker~\cite{docker} containers. The front-end REST API receives input from
-the user, unpacks the experiment into a set of instances, and submits them one
+the user, unpacks the experiment into a set of trials, and submits them one
 by one to the Celery task queue (via RabbitMQ) for processing. Each worker, with
 identical configuration, listens on the task queue, fetches tasks, and executes
 them, storing the results back into Celery (via Redis). The user can then, via
@@ -181,11 +182,13 @@ can be seen in Figure~\ref{fig:architecture}.
   \captionof{figure}{An overview of the architecture of \testbench{}.}\label{fig:architecture}
 \end{Figure}
 
-As experiments are executed inside of Docker containers, the host machine's
-control socket is bind-mounted into the Docker container running the worker
-application, such that the worker effectively spawns and runs experiments at the
-same containment level as itself. The runtime reported is the runtime seen by
-Docker.
+As experiments are executed inside of Docker containers, the host
+machine's control socket is bind-mounted into the Docker container
+running the worker application, such that the worker effectively
+spawns and runs experiments at the same containment level as
+itself. The runtime reported is the runtime seen by Docker, that is we
+do not include the overheads message handling and starting/stopping
+the docker container in this work.
 
 \subsection{Cloud Environment and Provisioning}
 
@@ -197,8 +200,8 @@ interference with the experiments. Each worker VM (\texttt{medium}) receives the
 same configuration; a clean installation of the Docker community edition, the
 address of the master VM, and a Docker container mounting a shared folder via
 NFS from the master for sharing benchmark files. All workers immediately start
-up a container running a worker instance upon booting and finishing
-provisioning. These worker instances were intentionally configured to only
+up a container running a worker trial upon booting and finishing
+provisioning. These worker trials were intentionally configured to only
 execute one task at a time, for optimal isolation between trials.
 
 It is worth mentioning that \testbench{} is designed to be independent of the
@@ -211,37 +214,58 @@ To demonstrate the the usability of the system as well as for evaluating
 measurement errors due to virtualization, we executed a number of experiments
 with \testbench{}. The following parameters were used:
 \begin{itemize}
-\item two approximation strategies \emph{Reduced Point
-  Floating Point}~\cite{uppsat}, and \emph{bit-vector
-  approximation}~\cite{joel}
+\item two approximation strategies \emph{Reduced Point Floating
+  Point}~\cite{uppsat}, and \emph{bit-vector
+  approximation}~\cite{joel}.
 
-\item the~\emph{z3}~\cite{z3} solver for the backend
+\item the~\emph{z3}~\cite{z3} solver for the backend.
 
-\item a 60~second timeout
+\item a 60~second timeout.
 
-\item a set of 130 benchmarks, consisting of satisfiable instances of the
-  quantifier free floating point segment of the SMT-LIB~\cite{smtlib}
+\item a set of 130 benchmarks, consisting of satisfiable trials of the
+  quantifier free floating point segment of the SMT-LIB~\cite{smtlib}.
 \end{itemize}
-We executed the experiment \fixme{five bazillion} times over a period of
-\fixme{a hundred years}, and recorded the results as reported by \testbench{}.
-%% Fix Joel citation
+We executed experiments a number of times over a period of the course
+of a few days, and recorded the results as reported by
+\testbench{}. It should be noted that spreading out experiments over
+an even longer period of time would yield more interesting results,
+but was not possible due to time constraints.
 
 
 \subsection{Measurement Errors in Our Cloud Environment}
-Cloud environments have suffered from unpredictable performance -- the noisy
-neighbors problem~\cite{williamson} -- since their inception. As scheduling is
-non-deterministic to a cloud user, there is a danger of incurring an unknown and
-unpredictable performance penalty when executing code in the cloud. For example,
-there is no guarantee that the underlying hardware is exactly the same between
-virtual machines. To measure the effect of this, rudimentary experiments have
-been carried out a single trial has been repeated one thousand times during
-various intervals over the course of one day in the \emph{cloud}. The same setup
-was run on an \emph{in-house} physical machine, also repeated one thousand times
-in a controlled environment for comparison. The runtime was measured for each
-execution (the underlying software is deterministic) and some key numbers are
-presented in Table~\ref{tbl:one}. Note that the experiments were run by the same
-code as the one used by the worker back-end in \testbench{}, but without going
-through Celery first.
+Cloud environments have suffered from unpredictable performance -- the
+noisy neighbors problem~\cite{williamson} -- since their inception. As
+scheduling is non-deterministic to a cloud user, there is a danger of
+incurring an unknown and unpredictable performance penalty when
+executing code in the cloud. For example, there is no guarantee that
+the underlying hardware is exactly the same between virtual
+machines. To measure the effect of this, we have carried out
+rudimentary experiments.
+
+We performed the experiments with three different setups. First we ran
+each set-up in the cloud with one master and one worker machine
+(\emph{cloud-1}). We also ran each experiment in a cloud with one
+master and ten worker machines (\emph{cloud-10}). Finally, we also run
+each experiment on an physical computer within our computer lab for
+comparions (\emph{in-house}). We have tried to keep the in-house
+environment stable and serves as a comparison of what a non-virtual
+environment should look like. We then conducted two different set-ups.
+
+It should be noted that we have excluded all benchmarks leading to
+timeouts from the calculations below since they do not add anything
+interesting to the computation of the variance computation (there are
+no cases where a benchmark terminated on one trial but timed out on
+another trial with the same configuration).
+
+\subsubsection{Single Trial}
+A single trial has been repeated one thousand times during various
+intervals over the course of a few days. We measured the runtimes and
+computer average, minimum, maximum and the standard deviation,
+presented in Table~\ref{tbl:one}.
+
+%% Note that the experiments were run by the same
+%% code as the one used by the worker back-end in \testbench{}, but
+%% without going through Celery first.
 
 \begin{Figure}
   \centering
@@ -249,19 +273,22 @@ through Celery first.
     \hline
     & \emph{cloud-1} & \emph{in-house} \\
   \hline
-  Average runtime &  13.34 & 17.36\\
+  Avg. runtime &  13.34 & 17.36\\
   \hline
-  Maximum runtime & 16.14 & 19.15 \\
+  Max runtime & 16.14 & 19.15 \\
   \hline
-  Minimum runtime & 12.48 & 16.05\\
+  Min runtime & 12.48 & 16.05\\
   \hline      
-  Standard Deviation & 0.58 & 1.00 \\
+  Std. Dev. & 0.58 & 1.00 \\
   \hline
 \end{tabular}
-\captionof{table}{Statistics of error measurements (in seconds).}\label{tbl:one}
+\captionof{table}{Measurements of the \emph{Single Trial} set-up.}\label{tbl:one}
 \end{Figure}
 
-Furthermore, we run the set of benchmarks used in \cite{uppsat} six times to measure what the effects would be over a complete experiment. The total run-times are shown in Table~\ref{tbl:complete}.
+\subsubsection{Full Set}
+Furthermore, we run the set of benchmarks used in \cite{uppsat} three
+times to measure what the effects would be over a complete
+experiment. We measured the total runtimes for completing all the benchmarks, as well as the variance between the runtimes of each individual benchmark (each benchmark is executed three times for each configuration). The numbers are presented in Table~\ref{tbl:complete} and Table~\ref{tbl:complete2}.
 
 \begin{Figure}
   \centering
@@ -279,8 +306,6 @@ Furthermore, we run the set of benchmarks used in \cite{uppsat} six times to mea
 \captionof{table}{Runtime of the complete set of benchmarks (in seconds).}\label{tbl:complete}
 \end{Figure}
 
-We also group the first three runs and last three runs (using the same configuration) and calculate the variance for each benchmark and aggregate this by calculating the maximum and average standard deviation.
-
 \begin{Figure}
   \centering
   \begin{tabular}{|l|c|c|}
@@ -292,16 +317,17 @@ We also group the first three runs and last three runs (using the same configura
   Maximum COV  & 0.075 & 0.11 \\
   \hline
 \end{tabular}
-\captionof{table}{Statistics of error measurements (in seconds).}\label{tbl:one}
+\captionof{table}{Statistics of error measurements (in seconds).}\label{tbl:complete2}
 \end{Figure}
 
 
 \subsection{Scaling Comparison}
-
-A single-trial experiment was submitted a number of times, both proportional to
-the number of workers, and on its own 75~times. The complete runtime, measured
-from a script that submits the job via the REST API and then polls it until
-completion and records the time, can be seen in Figure~\ref{fig:scaling}.
+To see how well our system would scale, a single-trial experiment was
+submitted a number of times, both proportional to the number of
+workers, and on its own 75~times. The complete runtime, measured from
+a script that submits the job via the REST API and then polls it until
+completion and records the time, can be seen in
+Figure~\ref{fig:scaling}.
 \begin{Figure}
   \centering \includegraphics[width=0.9\textwidth]{scaling_graph}
   \captionof{figure}{The full runtime to complete a number of experiments in
@@ -313,11 +339,11 @@ By observing the various measurements we can see that the average
 effect of running on the virtual operating system is quite low (almost
 within half a second which is less than 5\%). However, the worst case
 is more than four times as bad (almost three seconds which is more
-than 20\%).
-
-When summing up the total runtimes it shows that there seems to not be
-much of a systematic bias since the final sums are very close to each
-other.
+than 20\%). When summing up the total runtimes it shows that there
+seems to not be much of a systematic bias since the final sums are
+very close to each other. This result is slightly better from what we
+have seen in previous research, which could be attributed to either a
+more homogenous cloud platform or perhaps our reduced experiment size.
 
 All in all it shows that the cloud environment is not completely
 unsuitable for benchmarking SMT solvers. There is a slight
@@ -329,17 +355,17 @@ by an automatic system which with little configuration allows for
 starting major experiments with just a few commands. These experiments
 will then be robust and also scalable. 
 
-\subsection{Scaling Up}
 Another major benefit of using the Celery/RabbitMQ is that the system
 scales very well horizontally. By just starting up more virtual
 machines and adding them to the queue the system can scale very
 large. Since the nature of benchmarking tasks are usually running at
 the minute-scale (rather than on a second-scale) the master-node will
-most likely always be able to keep up. Additionally, as the system outgrows its
-constraints, the infrastructure can be placed on multiple machines. Due to the
-distributed nature of the underlying systems, Redis and RabbitMQ can both be
-distributed across multiple systems, as can the front-end web server, given that
-its operation is entirely stateless with respect to the task queue.
+most likely always be able to keep up. Additionally, as the system
+outgrows its constraints, the infrastructure can be placed on multiple
+machines. Due to the distributed nature of the underlying systems,
+Redis and RabbitMQ can both be distributed across multiple systems, as
+can the front-end web server, given that its operation is entirely
+stateless with respect to the task queue.
 
 \subsection{Future Work}
 
