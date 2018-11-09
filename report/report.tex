@@ -202,8 +202,8 @@ measurement errors due to virtualization, we executed a number of experiments
 with \testbench{}. The following parameters were used:
 \begin{itemize}
 \item two approximation strategies \emph{Reduced Point
-  Floating Point}, presented in~\cite{uppsat}, and \emph{bit-vector
-  approximation}, presented in~\cite{joel}
+  Floating Point}~\cite{uppsat}, and \emph{bit-vector
+  approximation}~\cite{joel}
 
 \item the~\emph{z3}~\cite{z3} solver for the backend
 
@@ -218,19 +218,102 @@ We executed the experiment \fixme{five bazillion} times over a period of
 
 
 \subsection{Measurement Errors in Our Cloud Environment}
-\fixme{In which we report on the standard deviation and therefore the
-  reliability of our experiments when run on virtualised hardware and ideally
-  find that it's as close to zero as possible.}
+When running in a virtual environment, there is a danger of
+introducing noise since the context is uncontrolled. For example,
+there is no guarantee that the underlying hardware is exactly the same
+between virtual machine, or that a process is running by itself on a
+core. To measure the effect of this, rudimentary experiments have been
+carried out a single benchmark has been repeated one thousand times
+during various intervals over the course of one day. The runtime was
+measured for each execution (the underlying software is
+deterministic) and some key numbers are presented in Table~\ref{tbl:one}.
+
+
+\begin{Figure}
+  \centering
+\begin{tabular}{|l|c|}
+  \hline
+  Average runtime &  13.34 \\
+  \hline
+  Maximum runtime & 16.14 \\
+  \hline
+  Minimum runtime & 12.48 \\
+  \hline      
+  Standard Deviation & 0.58 \\
+  \hline
+\end{tabular}
+\captionof{table}{Statistics of error measurements (in seconds).}\label{tbl:one}
+\end{Figure}
+
+Furthermore, we run the set of benchmarks used in \cite{uppsat} six times to measure what the effects would be over a complete experiment. The total run-times are shown in Table~\ref{tbl:complete}.
+
+\begin{Figure}
+  \centering
+\begin{tabular}{|l|c|l|c|}
+  \hline
+  \multicolumn{2}{|c|}{z3} & \multicolumn{2}{c|}{mathsat} \\
+  \hline
+  Run 1 &  572.9 & Run 4 & 546.2 \\
+  \hline
+  Run 2 & 573.2 & Run 5 & 548.6 \\
+  \hline
+  Run 3 & 572.9 & Run 6 & 552.4 \\
+  \hline      
+\end{tabular}
+\captionof{table}{Runtime of the complete set of benchmarks (in seconds).}\label{tbl:complete}
+\end{Figure}
+
+We also group the first three runs and last three runs (using the same configuration) and calculate the variance for each benchmark and aggregate this by calculating the maximum and average standard deviation.
+
+\begin{Figure}
+  \centering
+  \begin{tabular}{|l|c|c|}
+    \hline
+    & Run 1-3 & Run 4-6 \\
+  \hline
+  Average standard deviation &  0.086 & 0.084 \\
+  \hline
+  Maximum standard deviation runtime & 0.95 & 0.39 \\
+  \hline
+\end{tabular}
+\captionof{table}{Statistics of error measurements (in seconds).}\label{tbl:one}
+\end{Figure}
+
 
 \subsection{Benchmark Lead Time Comparison}
  \fixme{Here we do some comparison on how long it takes to finish a set of benchmarks,
    compared to going by the manual approach, ideally finding that it's as close
    to positive infinity as possible.}
 
-
 \section{Discussion}
+By observing the various measurements we can see that the average
+effect of running on the virtual operating system is quite low (almost
+within half a second which is less than 5\%). However, the worst case
+is more than four times as bad (almost three seconds which is more
+than 20\%).
+
+When summing up the total runtimes it shows that there seems to not be
+much of a systematic bias since the final sums are very close to each
+other.
+
+All in all it shows that the cloud environment is not completely
+unsuitable for benchmarking SMT solvers. There is a slight
+uncertainity introduced, but if one solver is substantially better it
+will most likely overshadow this uncertainity.
+
+Most importantly, this system allows for replacing manual benchmarking
+by an automatic system which with little configuration allows for
+starting major experiments with just a few commands. These experiments
+will then be robust and also scalable.
+
 
 \subsection{Scaling Up}
+Another major benefit of using the Celery/RabbitMQ is that the system
+scales very well horizontally. By just starting up more virtual
+machines and adding them to the queue the system can scale very
+large. Since the nature of benchmarking tasks are usually running at
+the minute-scale (rather than on a second-scale) the master-node will
+most likely always be able to keep up.
 
 % Det går att bryta ut hela Celery-cirkusen om den behöver gå fortare
 % Workers osv skalar i princip obegränsat
