@@ -16,7 +16,7 @@ parameters:
     type: string
     label: Image name or ID
     description: Image to be used for compute instance
-    default: f252eced-7648-42bf-ad6a-74e8f4f9b7f5
+    default: 4957f15b-e1c9-453e-8940-ca0b10a629c3
 
   master_flavor:
     type: string

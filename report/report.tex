@@ -81,6 +81,16 @@ comparison and analysis of containers in the event of unexpected results.
 Additionally, as an added benefit, Docker ensures clean separation of
 experiments.
 
+\subsection{Related Work}
+There have been previous measurements of the variance connected to
+running on a virtual cluster. For example, CPU performance variance
+have been measured to be above 20\% in multiple studies
+\cite{measurementCloud, sameCloud}.
+
+To alleviate this, there have been ideas on how to create
+micro-benchmarks and use certain features to try and predict
+performance \cite{estimatingCloud}.
+
 
 \section{\uppsat{}}
 In this project we use the \uppsat{} SMT
@@ -224,22 +234,27 @@ there is no guarantee that the underlying hardware is exactly the same
 between virtual machine, or that a process is running by itself on a
 core. To measure the effect of this, rudimentary experiments have been
 carried out a single benchmark has been repeated one thousand times
-during various intervals over the course of one day. The runtime was
-measured for each execution (the underlying software is
-deterministic) and some key numbers are presented in Table~\ref{tbl:one}.
+during various intervals over the course of one day in the
+\emph{cloud}. The same setup was run on an \emph{in-house} physical machine,
+also repeated one thousand times in a controlled environment to try
+and reduce variance. The runtime was measured for each execution (the
+underlying software is deterministic) and some key numbers are
+presented in Table~\ref{tbl:one}.
 
 
 \begin{Figure}
   \centering
-\begin{tabular}{|l|c|}
+  \begin{tabular}{|l|c|c|}
+    \hline
+    & \emph{cloud} & \emph{in-house} \\
   \hline
-  Average runtime &  13.34 \\
+  Average runtime &  13.34 & 17.36\\
   \hline
-  Maximum runtime & 16.14 \\
+  Maximum runtime & 16.14 & 19.15 \\
   \hline
-  Minimum runtime & 12.48 \\
+  Minimum runtime & 12.48 & 16.05\\
   \hline      
-  Standard Deviation & 0.58 \\
+  Standard Deviation & 0.58 & 1.00 \\
   \hline
 \end{tabular}
 \captionof{table}{Statistics of error measurements (in seconds).}\label{tbl:one}
@@ -273,7 +288,7 @@ We also group the first three runs and last three runs (using the same configura
   \hline
   Average standard deviation &  0.086 & 0.084 \\
   \hline
-  Maximum standard deviation runtime & 0.95 & 0.39 \\
+  Maximum standard deviation  & 0.95 & 0.39 \\
   \hline
 \end{tabular}
 \captionof{table}{Statistics of error measurements (in seconds).}\label{tbl:one}
@@ -304,8 +319,7 @@ will most likely overshadow this uncertainity.
 Most importantly, this system allows for replacing manual benchmarking
 by an automatic system which with little configuration allows for
 starting major experiments with just a few commands. These experiments
-will then be robust and also scalable.
-
+will then be robust and also scalable. 
 
 \subsection{Scaling Up}
 Another major benefit of using the Celery/RabbitMQ is that the system
