@@ -191,7 +191,7 @@ Docker.
 
 \testbench{} is configured in a OpenStack cloud environment~\cite{openstack},
 using HEAT orchestration templates for provisioning. The base VMs are running
-Ubuntu~\fixme{18.08}. RabbitMQ, Redis, and the front-end API are all installed
+Ubuntu~18.04. RabbitMQ, Redis, and the front-end API are all installed
 on a (size \texttt{small}) separate VM (called the master) in order to avoid
 interference with the experiments. Each worker VM (\texttt{medium}) receives the
 same configuration; a clean installation of the Docker community edition, the
