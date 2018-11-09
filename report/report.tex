@@ -163,6 +163,11 @@ can be queried for its status (using a \texttt{GET}~request). Experiments can
 then be canceled (if running) and deleted via the \texttt{DELETE}~request to
 their endpoint.
 
+\begin{Figure}
+  \centering \includegraphics[width=0.9\textwidth]{table_view}
+  \captionof{figure}{The table view for two experiments.}\label{fig:table_view}
+\end{Figure}
+
 \subsection{System Design and Implementation}
 
 The implementation is based on the Celery task queue~\cite{celery}, and packaged
