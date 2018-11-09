@@ -69,6 +69,12 @@ push-images:
 	docker push ${DOCKER_REPO}:z3
 	docker push ${DOCKER_REPO}:mathsat
 
+worker:
+	cd testbench && docker build \
+			--file Dockerfile.worker \
+			--tag ${WORKER_TAG} .
+	docker push ${WORKER_TAG}
+
 validate-stack:
 	openstack stack create \
 	--dry-run \
