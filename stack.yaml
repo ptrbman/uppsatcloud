@@ -211,6 +211,11 @@ resources:
             docker run -d -p 80:5000 --name=api \
             --env-file=/home/ubuntu/env \
             backeman/uppsat:api
+
+            # DOWNLOAD IJCAR BENCHMARKS
+            wget https://github.com/uuverifiers/uppsat/raw/master/ijcar-2018/IJCAR2018-benchmarks.tar.gz -O bm.tar.gz
+            tar -xvzf bm.tar.gz -C $mountpoint
+            
             
           params:
             $pub_key: {get_param: extra_public_key}
