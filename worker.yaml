@@ -87,6 +87,8 @@ resources:
             --volume data-volume:$mountpoint \
             backeman/uppsat:worker
 
+            touch /home/ubuntu/done
+
           params:
             $master_host: {get_param: master_host}
             $mountpoint: {get_param: mountpoint}
