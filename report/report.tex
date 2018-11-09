@@ -228,19 +228,20 @@ We executed the experiment \fixme{five bazillion} times over a period of
 
 
 \subsection{Measurement Errors in Our Cloud Environment}
-When running in a virtual environment, there is a danger of
-introducing noise since the context is uncontrolled. For example,
-there is no guarantee that the underlying hardware is exactly the same
-between virtual machine, or that a process is running by itself on a
-core. To measure the effect of this, rudimentary experiments have been
-carried out a single benchmark has been repeated one thousand times
-during various intervals over the course of one day in the
-\emph{cloud}. The same setup was run on an \emph{in-house} physical machine,
-also repeated one thousand times in a controlled environment to try
-and reduce variance. The runtime was measured for each execution (the
-underlying software is deterministic) and some key numbers are
-presented in Table~\ref{tbl:one}.
-
+Cloud environments have suffered from unpredictable performance -- the noisy
+neighbors problem~\cite{williamson} -- since their inception. As scheduling is
+non-deterministic to a cloud user, there is a danger of incurring an unknown and
+unpredictable performance penalty when executing code in the cloud. For example,
+there is no guarantee that the underlying hardware is exactly the same between
+virtual machines. To measure the effect of this, rudimentary experiments have
+been carried out a single trial has been repeated one thousand times during
+various intervals over the course of one day in the \emph{cloud}. The same setup
+was run on an \emph{in-house} physical machine, also repeated one thousand times
+in a controlled environment for comparison. The runtime was measured for each
+execution (the underlying software is deterministic) and some key numbers are
+presented in Table~\ref{tbl:one}. Note that the experiments were run by the same
+code as the one used by the worker back-end in \testbench{}, but without going
+through Celery first.
 
 \begin{Figure}
   \centering
@@ -294,12 +295,6 @@ We also group the first three runs and last three runs (using the same configura
 \captionof{table}{Statistics of error measurements (in seconds).}\label{tbl:one}
 \end{Figure}
 
-
-\subsection{Benchmark Lead Time Comparison}
- \fixme{Here we do some comparison on how long it takes to finish a set of benchmarks,
-   compared to going by the manual approach, ideally finding that it's as close
-   to positive infinity as possible.}
-
 \section{Discussion}
 By observing the various measurements we can see that the average
 effect of running on the virtual operating system is quite low (almost
@@ -327,14 +322,11 @@ scales very well horizontally. By just starting up more virtual
 machines and adding them to the queue the system can scale very
 large. Since the nature of benchmarking tasks are usually running at
 the minute-scale (rather than on a second-scale) the master-node will
-most likely always be able to keep up.
-
-% Det går att bryta ut hela Celery-cirkusen om den behöver gå fortare
-% Workers osv skalar i princip obegränsat
-% Front-enden är JÄTTESNABB, men om man MÅSTE kan man ju ha en load balancer osv
-% (i princip kan flera front-ends köras HELT OBEROENDE eftersom de bara skickar
-% jobb till kön)
-% Workers är också oberoende så det är bara att hälla på fler
+most likely always be able to keep up. Additionally, as the system outgrows its
+constraints, the infrastructure can be placed on multiple machines. Due to the
+distributed nature of the underlying systems, Redis and RabbitMQ can both be
+distributed across multiple systems, as can the front-end web server, given that
+its operation is entirely stateless with respect to the task queue.
 
 \subsection{Future Work}
 
@@ -348,15 +340,25 @@ reasonable convenience feature in a production-ready version of the system
 would, however, probably expose a separate set of REST endpoints controlling the
 set of installed benchmarks.
 
-% Mer funktioner! Bells and whistles! Stöd för att köra experiment och
-% rapportera felmarginalen! Load balancer för deployments som skalar upp när kön
-% är full! Autenticering!
-% 
-% Continuous Integration med Travis?
+Other parts of the system left as future work is enhanced fault-tolerance, and
+the ability to rerun the same trials multiple times, reporting on the standard
+deviation and/or providing automatic error measurements based on the observed
+data. Such a system could conceivably even re-run its own benchmarks if high
+variance was detected!
 
 \section{Conclusion}
 
-\fixme{\lipsum[100]}
+In this paper we have presented \testbench{}, a system for automating a set of
+experiments as parameters injected into a set of Docker containers. As an
+example, we deployed \testbench{} to benchmark the \uppsat{} SMT~solver, as
+benchmarks are an important part of the development of solver technologies.
+
+Furthermore, we have demonstrated that our solution performs similarly or better
+than a previous manual testing cluster on bare-metal hardware, while conceivably
+enhancing ergonomics of use. We have also demonstrated the scalability of our
+system, and finally shown that the resulting runtimes reported by the
+experiments can in many cases be trusted, despite running on virtualised
+hardware.
 
 \printbibliography
 
